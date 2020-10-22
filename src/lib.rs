@@ -1,6 +1,3 @@
-pub mod cigar;
-pub mod gafpaf;
-pub mod gfa;
-pub mod optfields;
-pub mod parser;
-pub mod writer;
+pub mod gfa2;
+pub mod parser_gfa2;
+pub mod tag;

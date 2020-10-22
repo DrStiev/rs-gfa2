@@ -1,9 +1,9 @@
+/// define a custom error for the GFA2 format
 use std::{error, fmt};
-
 use bstr::ByteSlice;
 
-pub type GFAFieldResult<T> = Result<T, ParseFieldError>;
-pub type GFAResult<T> = Result<T, ParseError>;
+pub type GFA2FieldResult<T> = Result<T, ParseFieldError>;
+pub type GFA2Result<T> = Result<T, ParseError>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ParserTolerance {
@@ -93,8 +93,8 @@ impl error::Error for ParseFieldError {}
 /// Type encapsulating different kinds of GFA parsing errors
 #[derive(Debug)]
 pub enum ParseError {
-    /// The line type was something other than 'H', 'S', 'L', 'C', or
-    /// 'P'. This is ignored by the file parser rather than a fail
+    /// The line type was something other than 'H', 'S', 'F', 'E', 
+    /// 'G', 'O' or 'U'. This is ignored by the file parser rather than a fail
     /// condition.
     UnknownLineType,
     /// Tried to parse an empty line. Can be ignored.
@@ -114,7 +114,7 @@ impl fmt::Display for ParseError {
         use ParseError as PE;
         match self {
             PE::UnknownLineType => {
-                write!(f, "Line type was not one of 'H', 'S', 'L', 'C', 'P'")
+                write!(f, "Line type was not one of 'H', 'S', 'F', 'E', 'G', 'O' or 'U'")
             }
             PE::EmptyLine => write!(f, "Line was empty"),
             PE::InvalidLine(field_err, line) => {

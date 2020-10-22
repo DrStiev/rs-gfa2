@@ -1,6 +1,6 @@
+/// I don't think this file could be useful as the original.
 use serde::{Deserialize, Serialize};
-
-use crate::parser::ParseFieldError;
+use crate::parser_gfa2::ParseFieldError;
 
 /// Represents segment orientation/strand
 #[derive(
@@ -108,14 +108,14 @@ impl std::str::FromStr for Orientation {
     }
 }
 
-/// Display uses the GFA spec if the `{}` format argument is used,
+/// Display uses the GFA2 spec if the `{}` format argument is used,
 /// mapping `Forward` to "+", `Backward` to "-". If the alternate
 /// format flag is used, i.e. `{:#}`, `Forward` will be mapped to ">",
 /// `Backward` to "<".
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use std::fmt;
 /// use gfa::gfa::Orientation as O;
 ///
