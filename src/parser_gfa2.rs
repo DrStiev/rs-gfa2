@@ -255,23 +255,6 @@ where
     input.next().ok_or(ParseFieldError::MissingFields)
 }
 
-/// function that parses the ref tag
-/// ```<ref> <- [!-~]+[+-]```
-fn parse_ref<I>(input: &mut I) -> GFA2FieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Reference"))
-}
-
 /// function that parses the HEADER field
 /// ```H {VN:Z:2.0} {TS:i:<trace spacing>} <tag>*```
 impl<T: OptFields> Header<T> {
@@ -416,7 +399,7 @@ impl<N: SegmentId, T: OptFields> Fragment<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next(&mut input)?;
-        let ext_ref = parse_ref(&mut input)?;
+        let ext_ref = N::parse_next_ref(&mut input)?;
         let sbeg = parse_pos(&mut input)?;
         let send = parse_pos(&mut input)?;
         let fbeg = parse_pos(&mut input)?;
@@ -451,8 +434,8 @@ impl<N: SegmentId, T: OptFields> Edge<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = parse_ref(&mut input)?;
-        let sid2 = parse_ref(&mut input)?;
+        let sid1 = N::parse_next_ref(&mut input)?;
+        let sid2 = N::parse_next_ref(&mut input)?;
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -522,8 +505,8 @@ impl<N: SegmentId, T: OptFields> Gap<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = parse_ref(&mut input)?;
-        let sid2 = parse_ref(&mut input)?;
+        let sid1 = N::parse_next_ref(&mut input)?;
+        let sid2 = N::parse_next_ref(&mut input)?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
         let tag = T::parse(input);
@@ -762,6 +745,63 @@ mod tests {
     }
 
     #[test]
+    fn can_parse_alignment_cigar() {
+        let cigar = vec!["1M1I1M1I2M"];
+        let result = parse_alignment(&mut cigar.iter());
+
+        match result{
+            Err(why) => println!("Error: {}", why),
+            Ok(u) => {
+                assert_eq!(cigar.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                println!("{}", u);
+            },
+        }
+    }
+
+    #[test]
+    fn can_parse_alignment_trace() {
+        let trace = vec!["0,2,4"];
+        let result = parse_alignment(&mut trace.iter());
+
+        match result{
+            Err(why) => println!("Error: {}", why),
+            Ok(u) => {
+                assert_eq!(trace.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                println!("{}", u);
+            },
+        }
+    }
+
+    #[test]
+    fn can_parse_no_alignment() {
+        let no_aligment = vec!["*"];
+        let result = parse_alignment(&mut no_aligment.iter());
+
+        match result{
+            Err(why) => println!("Error: {}", why),
+            Ok(u) => {
+                assert_eq!(no_aligment.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                println!("{}", u);
+            },
+        }
+    }
+
+    #[test]
+    fn can_parse_error_alignment() {
+        // this should return an error message (and it does)
+        let error = vec!["ERROR"];
+        let result = parse_alignment(&mut error.iter());
+
+        match result{
+            Err(why) => println!("Error: {}", why),
+            Ok(u) => {
+                assert_eq!(error.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                println!("{}", u);
+            },
+        }
+    }
+
+    #[test]
     fn can_parse_gfa2_file_with_tag() {
         let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
         let gfa2: GFA2<BString, OptionalFields> =
@@ -791,15 +831,48 @@ mod tests {
         let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
         let gfa2: GFA2<BString, OptionalFields> =
             parser.parse_file(&"./src/tests/gfa2_files/data.gfa").unwrap();
+
+        let head = gfa2.headers.len();
+        let seg = gfa2.segments.len();
+        let frag = gfa2.fragments.len();
+        let edge = gfa2.edges.len();
+        let gap = gfa2.gaps.len();
+        let ogroup = gfa2.groups_o.len();
+        let ugroup = gfa2.groups_u.len();
+
+        assert_eq!(head, 1);
+        assert_eq!(seg, 9);
+        assert_eq!(frag, 14);
+        assert_eq!(edge, 12);
+        assert_eq!(gap, 0);
+        assert_eq!(ogroup, 2);
+        assert_eq!(ugroup, 0);
+
     
         println!("{}", gfa2);
     }
 
     #[test]
-    fn can_parse_multiple_tag() {
+    fn can_parse_gfa2_with_multiple_tag() {
         let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
         let gfa2: GFA2<BString, OptionalFields> =
             parser.parse_file(&"./src/tests/gfa2_files/sample.gfa").unwrap();
+
+        let head = gfa2.headers.len();
+        let seg = gfa2.segments.len();
+        let frag = gfa2.fragments.len();
+        let edge = gfa2.edges.len();
+        let gap = gfa2.gaps.len();
+        let ogroup = gfa2.groups_o.len();
+        let ugroup = gfa2.groups_u.len();
+
+        assert_eq!(head, 2);
+        assert_eq!(seg, 1);
+        assert_eq!(frag, 0);
+        assert_eq!(edge, 1);
+        assert_eq!(gap, 0);
+        assert_eq!(ogroup, 0);
+        assert_eq!(ugroup, 0);
     
         println!("{}", gfa2);
     }

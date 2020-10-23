@@ -173,7 +173,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
 )]
 pub struct Fragment<N, T: OptFields> {
     pub id: N,
-    pub ext_ref: BString, // orientation as final char (+-)
+    pub ext_ref: N, // orientation as final char (+-)
     pub sbeg: BString,
     pub send: BString, // dollar character as optional final char
     pub fbeg: BString,
@@ -209,7 +209,7 @@ impl<N: SegmentId, T: OptFields> Fragment<N, T> {
     pub(crate) fn nameless_clone<M: Default>(&self) -> Fragment<M, T> {
         Fragment {
             id: Default::default(),
-            ext_ref: self.ext_ref.clone(),
+            ext_ref: Default::default(),
             sbeg: self.sbeg.clone(),
             send: self.send.clone(),
             fbeg: self.fbeg.clone(),
@@ -230,7 +230,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
             f,
             "F\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.id,
-            self.ext_ref.as_bstr(),
+            self.ext_ref,
             self.sbeg.as_bstr(),
             self.send.as_bstr(),
             self.fbeg.as_bstr(),
@@ -275,8 +275,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
 )]
 pub struct Edge<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: BString, // orientation as final char (+-)
-    pub sid2: BString, // orientation as final char (+-)
+    pub sid1: N, // orientation as final char (+-)
+    pub sid2: N, // orientation as final char (+-)
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
@@ -314,8 +314,8 @@ impl<N: SegmentId, T: OptFields> Edge<N, T> {
     pub(crate) fn nameless_clone<M: Default>(&self) -> Edge<M, T> {
         Edge {
             id: Default::default(),
-            sid1: self.sid1.clone(),
-            sid2: self.sid2.clone(),
+            sid1: Default::default(),
+            sid2: Default::default(),
             beg1: self.beg1.clone(),
             end1: self.end1.clone(),
             beg2: self.beg2.clone(),
@@ -336,8 +336,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
             f,
             "E\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.id,
-            self.sid1.as_bstr(),
-            self.sid2.as_bstr(),
+            self.sid1,
+            self.sid2,
             self.beg1.as_bstr(),
             self.end1.as_bstr(),
             self.beg2.as_bstr(),
@@ -379,8 +379,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
 )]
 pub struct Gap<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: BString, // orientation as final char (+-)
-    pub sid2: BString, // orientation as final char (+-)
+    pub sid1: N, // orientation as final char (+-)
+    pub sid2: N, // orientation as final char (+-)
     pub dist: BString,
     pub var: BString,
     pub tag: T,
@@ -409,8 +409,8 @@ impl<N: SegmentId, T: OptFields> Gap<N, T> {
     pub(crate) fn nameless_clone<M: Default>(&self) -> Gap<M, T> {
         Gap {
             id: Default::default(),
-            sid1: self.sid1.clone(),
-            sid2: self.sid2.clone(),
+            sid1: Default::default(),
+            sid2: Default::default(),
             dist: self.dist.clone(),
             var: self.var.clone(),
             tag: self.tag.clone(),
@@ -428,8 +428,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
             f,
             "G\t{}\t{}\t{}\t{}\t{}\t{}",
             self.id,
-            self.sid1.as_bstr(),
-            self.sid2.as_bstr(),
+            self.sid1,
+            self.sid2,
             self.dist.as_bstr(),
             self.var.as_bstr(),
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
