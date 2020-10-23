@@ -1,4 +1,4 @@
-/// I don't think this file could be useful as the original.
+/// I don't think this file could be as useful as the original.
 use serde::{Deserialize, Serialize};
 use crate::parser_gfa2::ParseFieldError;
 

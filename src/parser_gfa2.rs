@@ -1,5 +1,10 @@
 pub mod error;
-pub use self::error::{GFA2FieldResult, GFA2Result, ParseError, ParseFieldError};
+pub use self::error::{
+    GFA2FieldResult, 
+    GFA2Result, 
+    ParseError, 
+    ParseFieldError,
+};
 
 use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
@@ -78,10 +83,6 @@ impl GFA2ParserBuilder {
             _optional_fields: std::marker::PhantomData,
             _segment_names: std::marker::PhantomData,
         }
-    }
-
-    pub fn build_usize_id<T: OptFields>(self) -> GFA2Parser<usize, T> {
-        self.build()
     }
 
     pub fn build_bstr_id<T: OptFields>(self) -> GFA2Parser<BString, T> {
@@ -876,21 +877,4 @@ mod tests {
     
         println!("{}", gfa2);
     }
-
-    /*
-    #[test]
-    fn can_parse_gfa2_usize() {
-        let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-        let usize_gfa2 = parser.parse_file(&"./src/tests/gfa2_files/data.gfa");
-
-        assert!(usize_gfa2.is_err());
-        let err = usize_gfa2.unwrap_err();
-        assert!(matches!(
-            err,
-            ParseError::InvalidLine(ParseFieldError::UintIdError, _)
-        ));
-
-        //println!("{:?}", usize_gfa2);
-    }
-    */
 }

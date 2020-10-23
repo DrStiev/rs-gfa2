@@ -1,4 +1,4 @@
-pub mod name_conversion;
+//pub mod name_conversion;
 pub mod orientation;
 pub mod traits;
 
@@ -112,17 +112,6 @@ impl<T: OptFields> Segment<BString, T> {
     }
 }
 
-impl<N: SegmentId, T: OptFields> Segment<N, T> {
-    pub(crate) fn nameless_clone<M: Default>(&self) -> Segment<M, T> {
-        Segment {
-            id: Default::default(),
-            len: self.len.clone(),
-            sequence: self.sequence.clone(),
-            tag: self.tag.clone(),
-        }
-    }
-}
-
 impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -201,21 +190,6 @@ impl<T: OptFields> Fragment<BString, T> {
             fend: fend.into(),
             alignment: alignment.into(),
             tag: Default::default(),
-        }
-    }
-}
-
-impl<N: SegmentId, T: OptFields> Fragment<N, T> {
-    pub(crate) fn nameless_clone<M: Default>(&self) -> Fragment<M, T> {
-        Fragment {
-            id: Default::default(),
-            ext_ref: Default::default(),
-            sbeg: self.sbeg.clone(),
-            send: self.send.clone(),
-            fbeg: self.fbeg.clone(),
-            fend: self.fend.clone(),
-            alignment: self.alignment.clone(),
-            tag: self.tag.clone(),
         }
     }
 }
@@ -310,22 +284,6 @@ impl<T: OptFields> Edge<BString, T> {
     }
 }
 
-impl<N: SegmentId, T: OptFields> Edge<N, T> {
-    pub(crate) fn nameless_clone<M: Default>(&self) -> Edge<M, T> {
-        Edge {
-            id: Default::default(),
-            sid1: Default::default(),
-            sid2: Default::default(),
-            beg1: self.beg1.clone(),
-            end1: self.end1.clone(),
-            beg2: self.beg2.clone(),
-            end2: self.end2.clone(),
-            alignment: self.alignment.clone(),
-            tag: self.tag.clone(),
-        }
-    }
-}
-
 impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -405,19 +363,6 @@ impl<T: OptFields> Gap<BString, T> {
     }
 }
 
-impl<N: SegmentId, T: OptFields> Gap<N, T> {
-    pub(crate) fn nameless_clone<M: Default>(&self) -> Gap<M, T> {
-        Gap {
-            id: Default::default(),
-            sid1: Default::default(),
-            sid2: Default::default(),
-            dist: self.dist.clone(),
-            var: self.var.clone(),
-            tag: self.tag.clone(),
-        }
-    }
-}
-
 impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -468,7 +413,7 @@ pub struct GroupO<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
     pub id: BString, // optional id, can be either * or id tag
-    pub var_field: BString,  
+    pub var_field: BString, // "array" of ref (from 1 to n)
     pub tag: T,  
     _segment_names: std::marker::PhantomData<N>,
 }
@@ -481,22 +426,6 @@ impl<N: SegmentId, T: OptFields> GroupO<N, T> {
             tag: tag,
             _segment_names: std::marker::PhantomData,
         }
-    }
-}
-
-impl<N: SegmentId, T:OptFields> GroupO<N, T> {
-    /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
-        use Orientation::*;
-        let last = input.len() - 1;
-        let orient = match input[last] {
-            b'+' => Forward,
-            b'-' => Backward,
-            _ => panic!("Group O segment did not include orientation"),
-        };
-        let seg = &input[..last];
-        let id = N::parse_opt_id(seg)?;
-        Some((id, orient))
     }
 }
 
@@ -521,15 +450,6 @@ impl<T: OptFields> GroupO<BString, T> {
     }
 }
 
-impl<T: OptFields> GroupO<usize, T> {
-    /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
-        self.var_field
-            .split_str(b" ")
-            .filter_map(Self::parse_segment_id)
-    } 
-}
-
 impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -540,8 +460,6 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
             f,
             "O\t{}\t{}\t{}",
             self.id.as_bstr(),
-            // this inline method is useful but add a whitespace at the end of the var_field 
-            // creating so an incorrect string 
             self.var_field.as_bstr().to_string() + " ",
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
@@ -579,7 +497,7 @@ pub struct GroupU<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
     pub id: BString, // optional id, can be either * or id tag
-    pub var_field: BString,  
+    pub var_field: BString, // "array" of id (from 1 to n)  
     pub tag: T,  
     _segment_names: std::marker::PhantomData<N>,
 }
@@ -592,16 +510,6 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
             tag: tag,
             _segment_names: std::marker::PhantomData,
         }
-    }
-}
-
-impl<N: SegmentId, T:OptFields> GroupU<N, T> {
-    /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<N> {
-        let last = input.len() - 1;
-        let seg = &input[..last];
-        let id = N::parse_opt_id(seg)?;
-        Some(id)
     }
 }
 
@@ -620,15 +528,6 @@ impl<T: OptFields> GroupU<BString, T> {
     }
 }
 
-impl<T: OptFields> GroupU<usize, T> {
-    /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
-        self.var_field
-            .split_str(b" ")
-            .filter_map(Self::parse_segment_id)
-    } 
-}
-
 impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -639,12 +538,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
             f,
             "U\t{}\t{}\t{}",
             self.id.as_bstr(),
-            // this inline method is useful but add a whitespace at the end of the var_field 
-            // creating so an incorrect string 
             self.var_field.as_bstr().to_string() + " ",
-            // this inline method is useful but add a tabspace at the end of the tag 
-            // creating so an incorrect string 
-            //self.tag.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
@@ -660,7 +554,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
 /// 
 /// let gfa2: GFA2<BString, OptionalFields> = GFA2 {
 ///     headers: vec![
-///         Header::new(Some("2.0".into())),
+///         Header::new(Some("VN:Z:2.0".into())),
 ///     ],
 ///     segments: vec![
 ///         Segment::new(b"A", b"10", b"AAAAAAACGT"),
@@ -684,7 +578,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
 /// // inizialize a simple gfa2 object 
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
-pub struct GFA2<N, T:OptFields> { // OptFields is used to encode the <tag>* item
+pub struct GFA2<N, T:OptFields> { 
+    // OptFields is used to encode the <tag>* item
     // struct to hold the results of parsing a file; not actually a graph
     pub headers: Vec<Header<T>>,
     pub segments: Vec<Segment<N, T>>,
