@@ -193,8 +193,8 @@ impl<T: OptFields> Fragment<BString, T> {
         alignment: BString,
     ) -> Self {
         Fragment {
-            id: id.into(),
-            ext_ref: ext_ref.into(),
+            id: BString::from(id),
+            ext_ref: BString::from(ext_ref),
             sbeg: sbeg.into(),
             send: send.into(),
             fbeg: fbeg.into(),
@@ -297,9 +297,9 @@ impl<T: OptFields> Edge<BString, T> {
         alignment: &[u8],
     ) -> Self {
         Edge {
-            id: id.into(),
-            sid1: sid1.into(),
-            sid2: sid2.into(),
+            id: BString::from(id),
+            sid1: BString::from(sid1),
+            sid2: BString::from(sid2),
             beg1: beg1.into(),
             end1: end1.into(),
             beg2: beg2.into(),
@@ -395,9 +395,9 @@ impl<T: OptFields> Gap<BString, T> {
         var: &[u8],
     ) -> Self {
         Gap {
-            id: id.into(),
-            sid1: sid1.into(),
-            sid2: sid2.into(),
+            id: BString::from(id),
+            sid1: BString::from(sid1),
+            sid2: BString::from(sid2),
             dist: dist.into(),
             var: var.into(),
             tag: Default::default(),

@@ -876,4 +876,21 @@ mod tests {
     
         println!("{}", gfa2);
     }
+
+    /*
+    #[test]
+    fn can_parse_gfa2_usize() {
+        let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+        let usize_gfa2 = parser.parse_file(&"./src/tests/gfa2_files/data.gfa");
+
+        assert!(usize_gfa2.is_err());
+        let err = usize_gfa2.unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::InvalidLine(ParseFieldError::UintIdError, _)
+        ));
+
+        //println!("{:?}", usize_gfa2);
+    }
+    */
 }

@@ -44,6 +44,9 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
     }
 }
 
+// usize it's not useful as it was with GFA1 due to the fact that 
+// SegmentId now use very often symbols that can not be converted to usize 
+// like alphabetic characters and special symbols {+, -, $, ...}
 impl SegmentId for usize {
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
 
