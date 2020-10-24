@@ -85,6 +85,10 @@ impl GFA2ParserBuilder {
         }
     }
 
+    pub fn build_usize_id<T: OptFields>(self) -> GFA2Parser<usize, T> {
+        self.build()
+    }
+
     pub fn build_bstr_id<T: OptFields>(self) -> GFA2Parser<BString, T> {
         self.build()
     }
@@ -351,6 +355,23 @@ impl<N: SegmentId, T: OptFields> Segment<N, T> {
     }
 }
 
+/// function that parses the sequence tag of the segment element
+/// ```<sequence> <- * | [!-~]+```
+fn parse_reference<I>(input: &mut I) -> GFA2FieldResult<BString>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
+    }
+
+    let next = next_field(input)?;
+    RE.find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Reference"))
+}
+
 /// function that parses the pos tag of the fragment element
 /// ```<pos> <- {-}[0-9]+{$}```
 fn parse_pos<I>(input: &mut I) -> GFA2FieldResult<BString>
@@ -400,7 +421,7 @@ impl<N: SegmentId, T: OptFields> Fragment<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next(&mut input)?;
-        let ext_ref = N::parse_next_ref(&mut input)?;
+        let ext_ref = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
         let sbeg = parse_pos(&mut input)?;
         let send = parse_pos(&mut input)?;
         let fbeg = parse_pos(&mut input)?;
@@ -435,8 +456,8 @@ impl<N: SegmentId, T: OptFields> Edge<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = N::parse_next_ref(&mut input)?;
-        let sid2 = N::parse_next_ref(&mut input)?;
+        let sid1 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
+        let sid2 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -506,8 +527,8 @@ impl<N: SegmentId, T: OptFields> Gap<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = N::parse_next_ref(&mut input)?;
-        let sid2 = N::parse_next_ref(&mut input)?;
+        let sid1 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
+        let sid2 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
         let tag = T::parse(input);
@@ -804,7 +825,7 @@ mod tests {
 
     #[test]
     fn can_parse_gfa2_file_with_tag() {
-        let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
+        let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
         let gfa2: GFA2<BString, OptionalFields> =
             parser.parse_file(&"./src/tests/gfa2_files/sample2.gfa").unwrap();
         
@@ -829,8 +850,8 @@ mod tests {
 
     #[test]
     fn can_parse_gfa2_file_with_no_tag() {
-        let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
-        let gfa2: GFA2<BString, OptionalFields> =
+        let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
+        let gfa2: GFA2<BString, ()> =
             parser.parse_file(&"./src/tests/gfa2_files/data.gfa").unwrap();
 
         let head = gfa2.headers.len();
@@ -854,8 +875,18 @@ mod tests {
     }
 
     #[test]
+    fn can_parse_gfa2_file_usize() {
+        // TODO: usize cannot handle the non alphanumeric characters ([A-Za-z0-9])
+        let parser: GFA2Parser<usize, OptionalFields> = GFA2Parser::new();
+        let gfa2: GFA2<usize, OptionalFields> =
+            parser.parse_file(&"./src/tests/gfa2_files/usize_test.gfa").unwrap();
+
+        println!("{}", gfa2);
+    }
+
+    #[test]
     fn can_parse_gfa2_with_multiple_tag() {
-        let parser: GFA2Parser<bstr::BString, OptionalFields> = GFA2Parser::new();
+        let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
         let gfa2: GFA2<BString, OptionalFields> =
             parser.parse_file(&"./src/tests/gfa2_files/sample.gfa").unwrap();
 

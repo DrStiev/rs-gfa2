@@ -2,7 +2,7 @@
 /// parsed and used as SegmentId
 use crate::parser_gfa2::ParseFieldError;
 
-use bstr::BString;
+use bstr::{BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
@@ -44,10 +44,8 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
     }
 }
 
-/*
-// usize it's not useful as it was with GFA1 due to the fact that 
-// SegmentId now use very often symbols that can not be converted to usize 
-// like alphabetic characters and special symbols {+, -, $, ...}
+// usize cannot handle the non alphanumeric characters ([A-Za-z0-9])
+// but the GFA2 format heavily rely on these special characters
 impl SegmentId for usize {
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
 
@@ -63,7 +61,6 @@ impl SegmentId for usize {
         input.to_str().ok()?.parse::<usize>().ok()
     }
 }
-*/
 
 impl SegmentId for BString {
     const ERROR: ParseFieldError = ParseFieldError::Utf8Error;

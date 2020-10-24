@@ -162,7 +162,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
 )]
 pub struct Fragment<N, T: OptFields> {
     pub id: N,
-    pub ext_ref: N, // orientation as final char (+-)
+    pub ext_ref: BString,//N, // orientation as final char (+-)
     pub sbeg: BString,
     pub send: BString, // dollar character as optional final char
     pub fbeg: BString,
@@ -249,8 +249,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
 )]
 pub struct Edge<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: N, // orientation as final char (+-)
-    pub sid2: N, // orientation as final char (+-)
+    pub sid1: BString,//N, // orientation as final char (+-)
+    pub sid2: BString,//N, // orientation as final char (+-)
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
@@ -337,8 +337,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
 )]
 pub struct Gap<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: N, // orientation as final char (+-)
-    pub sid2: N, // orientation as final char (+-)
+    pub sid1: BString,//N, // orientation as final char (+-)
+    pub sid2: BString,//N, // orientation as final char (+-)
     pub dist: BString,
     pub var: BString,
     pub tag: T,
@@ -429,6 +429,31 @@ impl<N: SegmentId, T: OptFields> GroupO<N, T> {
     }
 }
 
+impl<N: SegmentId, T:OptFields> GroupO<N, T> {
+    /// parses (and copies) a segment ID in the group segment list
+    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
+        use Orientation::*;
+        let last = input.len() - 1;
+        let orient = match input[last] {
+            b'+' => Forward,
+            b'-' => Backward,
+            _ => panic!("Group O segment did not include orientation"),
+        };
+        let seg = &input[..last];
+        let id = N::parse_ref(seg)?;
+        Some((id, orient))
+    }
+}
+
+impl<T: OptFields> GroupO<usize, T> {
+    /// Produces an iterator over the usize segments of the given group
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+        self.var_field
+            .split_str(b" ")
+            .filter_map(Self::parse_segment_id)
+    } 
+}
+
 impl<T: OptFields> GroupO<BString, T> {
     /// Produces an iterator over the segments of the given group,
     /// parsing the orientation and producing a slice to each segment
@@ -511,6 +536,25 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
             _segment_names: std::marker::PhantomData,
         }
     }
+}
+
+impl<N: SegmentId, T:OptFields> GroupU<N, T> {
+    /// parses (and copies) a segment ID in the group segment list
+    fn parse_segment_id(input: &[u8]) -> Option<N> {
+        let last = input.len() - 1;
+        let seg = &input[..last];
+        let id = N::parse_opt_id(seg)?;
+        Some(id)
+    }
+}
+
+impl<T: OptFields> GroupU<usize, T> {
+    /// Produces an iterator over the usize segments of the given group
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
+        self.var_field
+            .split_str(b" ")
+            .filter_map(Self::parse_segment_id)
+    } 
 }
 
 impl<T: OptFields> GroupU<BString, T> {
