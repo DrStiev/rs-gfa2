@@ -45,20 +45,30 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
 }
 
 // usize cannot handle the non alphanumeric characters ([A-Za-z0-9])
-// but the GFA2 format heavily rely on these special characters
+// but the GFA2 format heavily rely on these special characters (specially '*')
+/// using ```usize``` performs an implicit conversion from letters [A-Za-z]
+/// to digits [0-9] using the function:
+/// usize::from_str_radix(string_to_covnvert, base_36)
 impl SegmentId for usize {
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
+    // performs a conversion could leads to an errror because the ids are 
+    // only converted in the fields id and not in all the occurencies of 
+    // the string
+    // there's only 2 options, convert all the occurencies or convert back the id
 
     fn parse_id(input: &[u8]) -> Option<Self> {
-        input.to_str().ok()?.parse::<usize>().ok()
+        usize::from_str_radix(input.to_str().ok()?, 36).ok()
+        //input.to_str().ok()?.parse::<usize>().ok()
     }
 
     fn parse_opt_id(input: &[u8]) -> Option<Self> {
-        input.to_str().ok()?.parse::<usize>().ok()
+        usize::from_str_radix(input.to_str().ok()?, 36).ok()
+        //input.to_str().ok()?.parse::<usize>().ok()
     }
 
     fn parse_ref(input: &[u8]) -> Option<Self> {
-        input.to_str().ok()?.parse::<usize>().ok()
+        usize::from_str_radix(input.to_str().ok()?, 36).ok()
+        //input.to_str().ok()?.parse::<usize>().ok()
     }
 }
 

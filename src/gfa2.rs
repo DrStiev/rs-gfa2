@@ -6,7 +6,7 @@ pub use self::traits::*;
 pub use self::orientation::*;
 
 use crate::tag::*;
-use bstr::{BStr, BString, ByteSlice};
+use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -392,12 +392,11 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
 /// 
 /// // inizialize a simple o-group 
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-/// let ogroup_: GroupO<BString, _> =
-/// GroupO::new( 
-///     "P1".into(),
-///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-///     (),
-/// );
+/// let ogroup_: GroupO<BString, _> = GroupO { 
+///     id: "P1".into(),
+///     var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+///     tag: (),
+/// };
 /// ```
 #[derive(
     Default, 
@@ -412,66 +411,18 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
 pub struct GroupO<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
+    pub id: N, // BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
     pub tag: T,  
-    _segment_names: std::marker::PhantomData<N>,
-}
-
-impl<N: SegmentId, T: OptFields> GroupO<N, T> {
-    pub fn new(id: BString, var_field: BString, tag: T) -> Self {
-        GroupO {
-            id: id,
-            var_field: var_field,
-            tag: tag,
-            _segment_names: std::marker::PhantomData,
-        }
-    }
-}
-
-impl<N: SegmentId, T:OptFields> GroupO<N, T> {
-    /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
-        use Orientation::*;
-        let last = input.len() - 1;
-        let orient = match input[last] {
-            b'+' => Forward,
-            b'-' => Backward,
-            _ => panic!("Group O segment did not include orientation"),
-        };
-        let seg = &input[..last];
-        let id = N::parse_ref(seg)?;
-        Some((id, orient))
-    }
-}
-
-impl<T: OptFields> GroupO<usize, T> {
-    /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
-        self.var_field
-            .split_str(b" ")
-            .filter_map(Self::parse_segment_id)
-    } 
 }
 
 impl<T: OptFields> GroupO<BString, T> {
-    /// Produces an iterator over the segments of the given group,
-    /// parsing the orientation and producing a slice to each segment
-    /// name
-    pub fn iter(&self) -> impl Iterator<Item = (&'_ BStr, Orientation)> {
-        self.var_field.split_str(b" ").map(Self::segment_id_ref)
-    }
-
-    fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
-        use Orientation::*;
-        let last = input.len() - 1;
-        let orient = match input[last] {
-            b'+' => Forward,
-            b'-' => Backward,
-            _ => panic!("Group O segment did not include orientation"),
-        };
-        let seg = &input[..last];
-        (seg.as_ref(), orient)
+    pub fn new(id: &[u8], var_field: BString, tag: T) -> Self {
+        GroupO {
+            id: BString::from(id),
+            var_field: var_field,
+            tag: tag,
+        }
     }
 }
 
@@ -484,7 +435,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
         write!(
             f,
             "O\t{}\t{}\t{}",
-            self.id.as_bstr(),
+            self.id,
             self.var_field.as_bstr().to_string() + " ",
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
@@ -501,12 +452,11 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
 /// 
 /// // inizialize a simple u-group 
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-/// let ugroup_: GroupU<BString, _> =
-/// GroupU::new( 
-///     "SG1".into(),
-///     "16 24 SG2 51_24 16_24".into(),
-///     (),
-/// );
+/// let ugroup_: GroupU<BString, _> = GroupU { 
+///     id: "SG1".into(),
+///     var_field: "16 24 SG2 51_24 16_24".into(),
+///     tag: (),
+/// };
 /// ```
 #[derive(
     Default, 
@@ -521,54 +471,18 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
 pub struct GroupU<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
+    pub id: N, // BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of id (from 1 to n)  
     pub tag: T,  
-    _segment_names: std::marker::PhantomData<N>,
-}
-
-impl<N: SegmentId, T: OptFields> GroupU<N, T> {
-    pub fn new(id: BString, var_field: BString, tag: T) -> Self {
-        GroupU {
-            id: id,
-            var_field: var_field,
-            tag: tag,
-            _segment_names: std::marker::PhantomData,
-        }
-    }
-}
-
-impl<N: SegmentId, T:OptFields> GroupU<N, T> {
-    /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<N> {
-        let last = input.len() - 1;
-        let seg = &input[..last];
-        let id = N::parse_opt_id(seg)?;
-        Some(id)
-    }
-}
-
-impl<T: OptFields> GroupU<usize, T> {
-    /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
-        self.var_field
-            .split_str(b" ")
-            .filter_map(Self::parse_segment_id)
-    } 
 }
 
 impl<T: OptFields> GroupU<BString, T> {
-    /// Produces an iterator over the segments of the given group,
-    /// parsing the orientation and producing a slice to each segment
-    /// name
-    pub fn iter(&self) -> impl Iterator<Item = &'_ BStr> {
-        self.var_field.split_str(b" ").map(Self::segment_id_ref)
-    }
-
-    fn segment_id_ref(input: &[u8]) -> &'_ BStr {
-        let last = input.len() - 1;
-        let seg = &input[..last];
-        seg.as_ref()
+    pub fn new(id: &[u8], var_field: BString, tag: T) -> Self {
+        GroupU {
+            id: BString::from(id),
+            var_field: var_field,
+            tag: tag,
+        }
     }
 }
 
@@ -581,7 +495,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
         write!(
             f,
             "U\t{}\t{}\t{}",
-            self.id.as_bstr(),
+            self.id,
             self.var_field.as_bstr().to_string() + " ",
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
@@ -613,10 +527,10 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
 ///         Gap::new(b"g1", b"7+", b"22+", b"10", b"*"),
 ///     ],
 ///     groups_o: vec![
-///         GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), vec![]),
+///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", vec![]),
 ///     ],
 ///     groups_u: vec![
-///         GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), vec![]),
+///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", vec![]),
 ///     ]
 /// };
 /// // inizialize a simple gfa2 object 
