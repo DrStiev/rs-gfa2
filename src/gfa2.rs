@@ -6,7 +6,7 @@ pub use self::traits::*;
 pub use self::orientation::*;
 
 use crate::tag::*;
-use bstr::{BString, ByteSlice};
+use bstr::{BStr, BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -426,6 +426,52 @@ impl<T: OptFields> GroupO<BString, T> {
     }
 }
 
+impl<N: SegmentId, T:OptFields> GroupO<N, T> {
+    /// parses (and copies) a segment ID in the group segment list
+    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
+        use Orientation::*;
+        let last = input.len() - 1;
+        let orient = match input[last] {
+            b'+' => Forward,
+            b'-' => Backward,
+            _ => panic!("Group O segment did not include orientation"),
+        };
+        let seg = &input[..last];
+        let id = N::parse_ref(seg)?;
+        Some((id, orient))
+    }
+}
+
+impl<T: OptFields> GroupO<usize, T> {
+    /// Produces an iterator over the usize segments of the given group
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+        self.var_field
+            .split_str(b" ")
+            .filter_map(Self::parse_segment_id)
+    } 
+}
+
+impl<T: OptFields> GroupO<BString, T> {
+    /// Produces an iterator over the segments of the given group,
+    /// parsing the orientation and producing a slice to each segment
+    /// name
+    pub fn iter(&self) -> impl Iterator<Item = (&'_ BStr, Orientation)> {
+        self.var_field.split_str(b" ").map(Self::segment_id_ref)
+    }
+
+    fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
+        use Orientation::*;
+        let last = input.len() - 1;
+        let orient = match input[last] {
+            b'+' => Forward,
+            b'-' => Backward,
+            _ => panic!("Group O segment did not include orientation"),
+        };
+        let seg = &input[..last];
+        (seg.as_ref(), orient)
+    }
+}
+
 impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
@@ -483,6 +529,40 @@ impl<T: OptFields> GroupU<BString, T> {
             var_field: var_field,
             tag: tag,
         }
+    }
+}
+
+impl<N: SegmentId, T:OptFields> GroupU<N, T> {
+    /// parses (and copies) a segment ID in the group segment list
+    fn parse_segment_id(input: &[u8]) -> Option<N> {
+        let last = input.len() - 1;
+        let seg = &input[..last];
+        let id = N::parse_opt_id(seg)?;
+        Some(id)
+    }
+}
+
+impl<T: OptFields> GroupU<usize, T> {
+    /// Produces an iterator over the usize segments of the given group
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
+        self.var_field
+            .split_str(b" ")
+            .filter_map(Self::parse_segment_id)
+    } 
+}
+
+impl<T: OptFields> GroupU<BString, T> {
+    /// Produces an iterator over the segments of the given group,
+    /// parsing the orientation and producing a slice to each segment
+    /// name
+    pub fn iter(&self) -> impl Iterator<Item = &'_ BStr> {
+        self.var_field.split_str(b" ").map(Self::segment_id_ref)
+    }
+
+    fn segment_id_ref(input: &[u8]) -> &'_ BStr {
+        let last = input.len() - 1;
+        let seg = &input[..last];
+        seg.as_ref()
     }
 }
 
