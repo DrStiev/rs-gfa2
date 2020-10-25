@@ -764,6 +764,18 @@ mod tests {
     }
 
     #[test]
+    fn o_group_iter() {
+        let ogroup_: GroupO<BString, _> = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            (),
+        );
+        for (name, orientation) in ogroup_.iter(){
+            println!("{}{}", name, orientation);
+        }
+    }
+
+    #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
         let ugroup_: GroupU<BString, _> = GroupU::new(
@@ -778,6 +790,18 @@ mod tests {
         match result{
             Err(why) => println!("Error: {}", why),
             Ok(u) => assert_eq!(u, ugroup_),
+        }
+    }
+
+    #[test]
+    fn u_group_iter() {
+        let ugroup_: GroupU<BString, _> = GroupU::new(
+            "SG1".into(),
+            "16 24 SG2 51_24 16_24".into(),
+            (),
+        );
+        for name in ugroup_.iter(){
+            println!("{}", name);
         }
     }
 

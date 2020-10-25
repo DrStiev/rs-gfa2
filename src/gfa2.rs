@@ -540,15 +540,15 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
 // so I used as "deafult orientation" the Forward one ('+')
 impl<N: SegmentId, T:OptFields> GroupU<N, T> {
     /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
+    fn parse_segment_id(input: &[u8]) -> Option<N> {
         let id = N::parse_opt_id(input)?;
-        Some((id, Orientation::Forward))
+        Some(id)
     }
 }
 
 impl<T: OptFields> GroupU<usize, T> {
     /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
         self.var_field
             .split_str(b" ")
             .filter_map(Self::parse_segment_id)
@@ -561,12 +561,12 @@ impl<T: OptFields> GroupU<BString, T> {
     /// Produces an iterator over the segments of the given group,
     /// parsing the orientation and producing a slice to each segment
     /// name
-    pub fn iter(&self) -> impl Iterator<Item = (&'_ BStr, Orientation)> {
+    pub fn iter(&self) -> impl Iterator<Item = &'_ BStr> {
         self.var_field.split_str(b" ").map(Self::segment_id_ref)
     }
 
-    fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
-        (input.as_ref(), Orientation::Forward)
+    fn segment_id_ref(input: &[u8]) -> &'_ BStr {
+        input.as_ref()
     }
 }
 
