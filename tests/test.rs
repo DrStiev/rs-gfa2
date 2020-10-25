@@ -57,12 +57,12 @@ fn can_parse_gfa2_file_with_no_tag() {
 }
 
 // I don't think that using usize to encode the information of a gfa2 file it's a good idea.
-// usize it's too much limited, instead using BString I think it's better
+// usize it's too much limited, I think using BString it's better
 #[test]
 fn can_parse_gfa2_file_usize() {
     let parser: GFA2Parser<usize, OptionalFields> = GFA2Parser::new();
     let gfa2: GFA2<usize, OptionalFields> =
-        parser.parse_file(&"./tests/gfa2_files/usize_test.gfa").unwrap();
+        parser.parse_file(&"./tests/gfa2_files/example_usize.gfa").unwrap();
 
     println!("{}", gfa2);
 }
