@@ -557,7 +557,7 @@ where
     let next = next_field(input)?;
     RE.find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Reference"))
+        .ok_or(ParseFieldError::InvalidField("Reference Group Id"))
 }
 
 /// function that parses the id tag og the o group element
@@ -574,7 +574,24 @@ where
     let next = next_field(input)?;
     RE.find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Id"))
+        .ok_or(ParseFieldError::InvalidField("Id Group Id"))
+}
+
+/// function that parses the optional id tag of the o group element
+/// ```<id> <- *|[!-~]+```
+fn parse_optional_id<I>(input: &mut I) -> GFA2FieldResult<BString>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
+    }
+
+    let next = next_field(input)?;
+    RE.find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Optional Id"))
 }
 
 /// function that parses the GROUPO element
@@ -591,14 +608,10 @@ impl<N: SegmentId, T: OptFields> GroupO<N, T> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next_opt(&mut input)?;
+        let id = parse_optional_id(&mut input)?;
         let var_field = parse_group_ref(&mut input)?;
         let tag = T::parse(input);
-        Ok(GroupO {
-            id, 
-            var_field, 
-            tag,
-        })
+        Ok(GroupO::new(id, var_field, tag))
     }
 }
 
@@ -616,14 +629,10 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next_opt(&mut input)?;
+        let id = parse_optional_id(&mut input)?;
         let var_field = parse_group_id(&mut input)?;
         let tag = T::parse(input);
-        Ok(GroupU {
-            id, 
-            var_field, 
-            tag,
-        })
+        Ok(GroupU::new(id, var_field, tag))
     }
 }
 
@@ -739,12 +748,12 @@ mod tests {
     #[test]
     fn can_parse_ogroup() {
         let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-        let ogroup_: GroupO<BString, _> = GroupO { 
-            id: "P1".into(),
-            var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            tag: (),
-        };
-
+        let ogroup_: GroupO<BString, _> = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            (),
+        );
+       
         let fields = ogroup.split_terminator('\t');
         let result = GroupO::parse_line(fields);
 
@@ -757,11 +766,11 @@ mod tests {
     #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-        let ugroup_: GroupU<BString, _> = GroupU { 
-            id: "SG1".into(),
-            var_field: "16 24 SG2 51_24 16_24".into(),
-            tag: (),
-        };
+        let ugroup_: GroupU<BString, _> = GroupU::new(
+            "SG1".into(),
+            "16 24 SG2 51_24 16_24".into(),
+            (),
+        );
 
         let fields = ugroup.split_terminator('\t');
         let result = GroupU::parse_line(fields);

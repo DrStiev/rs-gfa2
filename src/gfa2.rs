@@ -392,11 +392,11 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
 /// 
 /// // inizialize a simple o-group 
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-/// let ogroup_: GroupO<BString, _> = GroupO { 
-///     id: "P1".into(),
-///     var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-///     tag: (),
-/// };
+/// let ogroup_: GroupO<BString, _> = GroupO::new(
+///     "P1".into(),
+///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+///     (),
+/// );
 /// ```
 #[derive(
     Default, 
@@ -411,17 +411,19 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
 pub struct GroupO<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: N, // BString, // optional id, can be either * or id tag
+    pub id: BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
     pub tag: T,  
+    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<T: OptFields> GroupO<BString, T> {
-    pub fn new(id: &[u8], var_field: BString, tag: T) -> Self {
+impl<N: SegmentId, T: OptFields> GroupO<N, T> {
+    pub fn new(id: BString, var_field: BString, tag: T) -> Self {
         GroupO {
-            id: BString::from(id),
+            id: id,
             var_field: var_field,
             tag: tag,
+            _segment_names: std::marker::PhantomData,
         }
     }
 }
@@ -498,11 +500,11 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
 /// 
 /// // inizialize a simple u-group 
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-/// let ugroup_: GroupU<BString, _> = GroupU { 
-///     id: "SG1".into(),
-///     var_field: "16 24 SG2 51_24 16_24".into(),
-///     tag: (),
-/// };
+/// let ugroup_: GroupU<BString, _> = GroupU::new(
+///     "SG1".into(),
+///     "16 24 SG2 51_24 16_24".into(),
+///     (),
+/// );
 /// ```
 #[derive(
     Default, 
@@ -517,17 +519,19 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
 pub struct GroupU<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: N, // BString, // optional id, can be either * or id tag
+    pub id: BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of id (from 1 to n)  
     pub tag: T,  
+    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<T: OptFields> GroupU<BString, T> {
-    pub fn new(id: &[u8], var_field: BString, tag: T) -> Self {
+impl<N: SegmentId, T: OptFields> GroupU<N, T> {
+    pub fn new(id: BString, var_field: BString, tag: T) -> Self {
         GroupU {
-            id: BString::from(id),
+            id: id,
             var_field: var_field,
             tag: tag,
+            _segment_names: std::marker::PhantomData,
         }
     }
 }
