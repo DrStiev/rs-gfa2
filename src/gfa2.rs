@@ -541,9 +541,7 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
 impl<N: SegmentId, T:OptFields> GroupU<N, T> {
     /// parses (and copies) a segment ID in the group segment list
     fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
-        let last = input.len() - 1;
-        let seg = &input[..last];
-        let id = N::parse_opt_id(seg)?;
+        let id = N::parse_opt_id(input)?;
         Some((id, Orientation::Forward))
     }
 }
@@ -568,9 +566,7 @@ impl<T: OptFields> GroupU<BString, T> {
     }
 
     fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
-        let last = input.len() - 1;
-        let seg = &input[..last];
-        (seg.as_ref(), Orientation::Forward)
+        (input.as_ref(), Orientation::Forward)
     }
 }
 
