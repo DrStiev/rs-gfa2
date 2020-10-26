@@ -162,7 +162,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
 )]
 pub struct Fragment<N, T: OptFields> {
     pub id: N,
-    pub ext_ref: BString,//N, // orientation as final char (+-)
+    pub ext_ref: N, // orientation as final char (+-)
     pub sbeg: BString,
     pub send: BString, // dollar character as optional final char
     pub fbeg: BString,
@@ -249,8 +249,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
 )]
 pub struct Edge<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: BString,//N, // orientation as final char (+-)
-    pub sid2: BString,//N, // orientation as final char (+-)
+    pub sid1: N, // orientation as final char (+-)
+    pub sid2: N, // orientation as final char (+-)
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
@@ -337,8 +337,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
 )]
 pub struct Gap<N, T: OptFields> {
     pub id: N, // optional id, can be either * or id tag
-    pub sid1: BString,//N, // orientation as final char (+-)
-    pub sid2: BString,//N, // orientation as final char (+-)
+    pub sid1: N, // orientation as final char (+-)
+    pub sid2: N, // orientation as final char (+-)
     pub dist: BString,
     pub var: BString,
     pub tag: T,
@@ -439,7 +439,7 @@ impl<N: SegmentId, T:OptFields> GroupO<N, T> {
             _ => panic!("Group O segment did not include orientation"),
         };
         let seg = &input[..last];
-        let id = N::parse_ref(seg)?;
+        let id = N::parse_id(seg)?;
         Some((id, orient))
     }
 }

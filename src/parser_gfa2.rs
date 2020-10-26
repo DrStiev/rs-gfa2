@@ -355,6 +355,7 @@ impl<N: SegmentId, T: OptFields> Segment<N, T> {
     }
 }
 
+/*
 /// function that parses the reference tag
 /// ```<reference> <- [!-~]+[+-]```
 fn parse_reference<I>(input: &mut I) -> GFA2FieldResult<BString>
@@ -371,6 +372,7 @@ where
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Reference"))
 }
+*/
 
 /// function that parses the pos tag of the fragment element
 /// ```<pos> <- {-}[0-9]+{$}```
@@ -421,7 +423,7 @@ impl<N: SegmentId, T: OptFields> Fragment<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next(&mut input)?;
-        let ext_ref = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
+        let ext_ref = N::parse_next_ref(&mut input)?;
         let sbeg = parse_pos(&mut input)?;
         let send = parse_pos(&mut input)?;
         let fbeg = parse_pos(&mut input)?;
@@ -456,8 +458,8 @@ impl<N: SegmentId, T: OptFields> Edge<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
-        let sid2 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
+        let sid1 = N::parse_next_ref(&mut input)?;
+        let sid2 = N::parse_next_ref(&mut input)?;
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -527,8 +529,8 @@ impl<N: SegmentId, T: OptFields> Gap<N, T> {
         I::Item: AsRef<[u8]>,
     {
         let id = N::parse_next_opt(&mut input)?;
-        let sid1 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
-        let sid2 = parse_reference(&mut input)?; //N::parse_next_ref(&mut input)?;
+        let sid1 = N::parse_next_ref(&mut input)?;
+        let sid2 = N::parse_next_ref(&mut input)?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
         let tag = T::parse(input);
@@ -776,10 +778,10 @@ mod tests {
     }
 
     #[test]
-    fn o_group_iter_usize() {
+    fn o_group_usize_iter() {
         let ogroup_: GroupO<usize, _> = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            "1".into(),
+            "A+ X+ B+".into(),
             (),
         );
         for (name, orientation) in ogroup_.iter(){
@@ -818,10 +820,10 @@ mod tests {
     }
 
     #[test]
-    fn u_group_iter_usize() {
+    fn u_group_usize_iter() {
         let ugroup_: GroupU<usize, _> = GroupU::new(
-            "SG1".into(),
-            "16 24 SG2 51_24 16_24".into(),
+            "1".into(),
+            "16 24".into(),
             (),
         );
         for name in ugroup_.iter(){
