@@ -56,13 +56,34 @@ fn can_parse_gfa2_file_with_no_tag() {
     println!("{}", gfa2);
 }
 
-// I don't think that using usize to encode the information of a gfa2 file it's a good idea.
-// usize it's too much limited, I think using BString it's better
 #[test]
 fn can_parse_gfa2_file_usize() {
-    let parser: GFA2Parser<usize, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<usize, OptionalFields> =
-        parser.parse_file(&"./tests/gfa2_files/example_usize.gfa").unwrap();
+    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+    let gfa2: GFA2<usize, ()> =
+        parser.parse_file(&"./tests/gfa2_files/irl.gfa").unwrap();
+
+    println!("{}", gfa2);
+}
+
+#[test]
+fn can_parse_gfa2_file_asterix_usize() {
+    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+    let gfa2: GFA2<usize, ()> =
+        parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
+
+    println!("{}", gfa2);
+}
+
+// FIXME
+// there's 2 kind of id that make the test panicked:
+// - 1P or P1
+// - 1_1 or 1_A or A_1 
+#[test]
+#[ignore]
+fn can_parse_gfa2_file_alphanumeric_usize() {
+    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+    let gfa2: GFA2<usize, ()> =
+        parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
 
     println!("{}", gfa2);
 }

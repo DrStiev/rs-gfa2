@@ -776,6 +776,18 @@ mod tests {
     }
 
     #[test]
+    fn o_group_iter_usize() {
+        let ogroup_: GroupO<usize, _> = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            (),
+        );
+        for (name, orientation) in ogroup_.iter(){
+            println!("{}{}", name, orientation);
+        }
+    }
+
+    #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
         let ugroup_: GroupU<BString, _> = GroupU::new(
@@ -796,6 +808,18 @@ mod tests {
     #[test]
     fn u_group_iter() {
         let ugroup_: GroupU<BString, _> = GroupU::new(
+            "SG1".into(),
+            "16 24 SG2 51_24 16_24".into(),
+            (),
+        );
+        for name in ugroup_.iter(){
+            println!("{}", name);
+        }
+    }
+
+    #[test]
+    fn u_group_iter_usize() {
+        let ugroup_: GroupU<usize, _> = GroupU::new(
             "SG1".into(),
             "16 24 SG2 51_24 16_24".into(),
             (),

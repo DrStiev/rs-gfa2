@@ -46,23 +46,76 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
 
 // usize cannot handle the non digit characters ([0-9])
 // but the GFA2 format heavily rely on alphanumeric characters ([A-Za-z0-9])
-// and special characters (specially '*')
 impl SegmentId for usize {
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
     
     fn parse_id(input: &[u8]) -> Option<Self> {
-        //usize::from_str_radix(input.to_str().ok()?, 36).ok()
-        input.to_str().ok()?.parse::<usize>().ok()
+        lazy_static!{
+            // controls if the id is a digit
+            static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
+        }
+        lazy_static!{
+            // controls if the id is an alphanumeric character and replace it with a random
+            // number (it should be unique)
+            // example: S\tA\t10\tAAAAAAACGT -> S\t404\t10\tAAAAAAACGT
+            //          S\tX\t10\tACGTCCACGT -> S\t404\t10\tACGTCCACGT
+            // the 2 id should be unique and not the same
+            static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
+        }
+        if RE.is_match(input.as_ref()) {
+            input.to_str().ok()?.parse::<usize>().ok()
+        } else if RE2.is_match(input.as_ref()) {
+            // maybe it's a bit verbose this type of conversion
+            404.to_string().parse::<usize>().ok()
+        } else {
+            panic!("Error! character {:?} cannot be parsed as usize", input)
+        }
     }
 
     fn parse_opt_id(input: &[u8]) -> Option<Self> {
-        //usize::from_str_radix(input.to_str().ok()?, 36).ok()
-        input.to_str().ok()?.parse::<usize>().ok()
+        lazy_static!{
+            // controls if the id is a digit
+            static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
+        }
+        lazy_static!{
+            // controls if the id is optional and then substitute it with a random
+            // number (it should be unique and associated with the relative segment id)
+            static ref RE1: Regex = Regex::new(r"(?-u)\*").unwrap();
+        }
+        lazy_static!{
+            static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
+        }
+        if RE.is_match(input.as_ref()) {
+            input.to_str().ok()?.parse::<usize>().ok()
+        } else if RE1.is_match(input.as_ref()) {
+            // maybe it's a bit verbose this type of conversion
+            101.to_string().parse::<usize>().ok()
+        } else if RE2.is_match(input.as_ref()) {
+            // maybe it's a bit verbose this type of conversion
+            404.to_string().parse::<usize>().ok()
+        } else {
+            panic!("Error! character {:?} cannot be parsed as usize", input)
+        }
     }
 
     fn parse_ref(input: &[u8]) -> Option<Self> {
-        //usize::from_str_radix(input.to_str().ok()?, 36).ok()
-        input.to_str().ok()?.parse::<usize>().ok()
+        lazy_static!{
+            // controls if the id is a digit
+            static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
+        }
+        lazy_static!{
+            // controls if the id is an alphanumeric character and replace it with a random
+            // number (it should be unique and associated with the relative segment id)
+            static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
+        }
+        if RE.is_match(input.as_ref()) {
+            input.to_str().ok()?.parse::<usize>().ok()
+        } else if RE2.is_match(input.as_ref()) {
+            // maybe it's a bit verbose this type of conversion
+            404.to_string().parse::<usize>().ok()
+        }else {
+            panic!("Error! character {:?} cannot be parsed as usize", input)
+        }
     }
 }
 
