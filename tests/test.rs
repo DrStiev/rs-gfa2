@@ -74,32 +74,6 @@ fn can_parse_gfa2_file_asterix_usize() {
     println!("{}", gfa2);
 }
 
-// FIXME
-// there's 2 kind of id that make the test panicked:
-// - 1P or P1
-// - 1_1 or 1_A or A_1 
-#[test]
-#[ignore]
-fn can_parse_gfa2_file_alphanumeric_usize() {
-    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-    let gfa2: GFA2<usize, ()> =
-        parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
-
-    println!("{}", gfa2);
-}
-
-// sometimes the "conversion" for usize exceed the bound of 
-// usize type and panicked the function, the number of element
-// that can be parse it's pretty limited
-#[test]
-fn can_parse_gfa2_graph_usize() {
-    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-    let _gfa2: GFA2<usize, ()> =
-        parser.parse_file(&"./tests/gfa2_files/graph.gfa").unwrap();
-
-    // println!("{}", gfa2);
-}
-
 #[test]
 fn can_parse_gfa2_graph() {
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();

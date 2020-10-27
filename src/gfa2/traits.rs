@@ -44,9 +44,8 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
     }
 }
 
-// usize cannot handle the non digit characters ([0-9])
-// but the GFA2 format heavily rely on alphanumeric characters ([A-Za-z0-9])
 impl SegmentId for usize {
+    // FIXME: compound id tag like: 1P or a_2 raises UintIdError
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
     
     fn parse_id(input: &[u8]) -> Option<Self> {
@@ -59,18 +58,26 @@ impl SegmentId for usize {
             // controls if the id is a digit
             static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
             }
-            lazy_static!{
-                // controls if the id is an alphanumeric character and replace it with a random
-                // number 
-                static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
-            }
-
+            
             if RE.is_match(input.as_ref()) {
                 input.to_str().ok()?.parse::<usize>().ok()
-            } else if RE2.is_match(input.as_ref()) {
-                convert_alphanumeric(input)
             } else {
-                panic!("Error! character {:?} cannot be parsed as usize", input)
+                //convert_alphanumeric(input)
+                let len = input.len();
+                let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
+                let mut x = 0;
+                let mut res : String = "".to_string();
+                while x < len {
+                    res = format!("{}{}", res, &get_code_from_char(&my_vec[x].to_string()).to_string());
+                    x += 1;
+                }
+                match res.len() {
+                    1..=20 => Some(res.parse::<usize>().unwrap()),
+                    _ => panic!(
+                        "Error! the conversion of the string: {} (length: {}) into usize: {} (lenght {}) exceeds {} ",
+                        input.to_str().unwrap(), input.len(), res, res.len(), "the maximum length (20 digits)"
+                    ),
+                } 
             }
         } else {
             panic!("Error! the id tag it's not correct")
@@ -87,25 +94,27 @@ impl SegmentId for usize {
                 // controls if the id is a digit
                 static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
             }
-            lazy_static!{
-                static ref RE1: Regex = Regex::new(r"(?-u)\*").unwrap();
-            }
-            lazy_static!{
-                // controls if the id is optional and then substitute it with a random
-                // number 
-                static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
-            }
-
+    
             if RE.is_match(input.as_ref()) {
                 input.to_str().ok()?.parse::<usize>().ok()
-            } else if RE1.is_match(input.as_ref()) {
-                // maybe it's a bit verbose this type of conversion
-                101.to_string().parse::<usize>().ok()
-            } else if RE2.is_match(input.as_ref()) {
-                convert_alphanumeric(input)
             } else {
-                panic!("Error! character {:?} cannot be parsed as usize", input)
-            }
+                //convert_alphanumeric(input)
+                let len = input.len();
+                let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
+                let mut x = 0;
+                let mut res : String = "".to_string();
+                while x < len {
+                    res = format!("{}{}", res, &get_code_from_char(&my_vec[x].to_string()).to_string());
+                    x += 1;
+                }
+                match res.len() {
+                    1..=20 => Some(res.parse::<usize>().unwrap()),
+                    _ => panic!(
+                        "Error! the conversion of the string: {} (length: {}) into usize: {} (lenght {}) exceeds {} ",
+                        input.to_str().unwrap(), input.len(), res, res.len(), "the maximum length (20 digits)"
+                    ),
+                }
+            } 
         } else {
             panic!("Error! the optional id tag it's not correct")
         }        
@@ -120,8 +129,8 @@ impl SegmentId for usize {
             let last = input.len() - 1;
 
             let orient = match input[last] {
-                b'+' => vec![b'0'],
-                b'-' => vec![b'1'],
+                b'+' => 0 as usize,
+                b'-' => 1 as usize,
                 _ => panic!("reference segment did not include orientation"),
             };
             let segment_id = &input[..last];
@@ -129,20 +138,25 @@ impl SegmentId for usize {
                 // controls if the id is a digit
                 static ref RE: Regex = Regex::new(r"(?-u)[0-9]+").unwrap();
             }
-            lazy_static!{
-                // controls if the id is an alphanumeric character and replace it with a random
-                // number 
-                static ref RE2: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
-            }
-
+        
             if RE.is_match(segment_id.as_ref()) {
-                format!("{}{}", segment_id.to_str().ok()?, orient.to_str().ok()?).parse::<usize>().ok()
-            } else if RE2.is_match(segment_id.as_ref()) {
-                let alphanumeric_id = convert_alphanumeric(segment_id);
-                format!("{}{}", alphanumeric_id.unwrap(), orient.to_str().ok()?).parse::<usize>().ok()
+                format!("{}{}", segment_id.to_str().ok()?, orient).parse::<usize>().ok()
             } else {
-                panic!("Error! character {:?} cannot be parsed as usize", segment_id)
-            }
+                let my_vec: Vec<char> = segment_id.to_str().unwrap().chars().collect();
+                let mut x = 0;
+                let mut res : String = "".to_string();
+                while x < last {
+                    res = format!("{}{}", res, &get_code_from_char(&my_vec[x].to_string()).to_string());
+                    x += 1;
+                }
+                match res.len() {
+                    1..=20 => format!("{}{}", res, orient).parse::<usize>().ok(),
+                    _ => panic!(
+                        "Error! the conversion of the string: {} (length: {}) into usize: {} (lenght {}) exceeds {} ",
+                        segment_id.to_str().unwrap(), segment_id.len(), res, res.len(), "the maximum length (20 digits)"
+                     ),
+                }
+            } 
         } else {
             panic!("Error! the reference tag it's not correct")
         }
@@ -177,60 +191,123 @@ impl SegmentId for BString {
     }
 }
 
-fn convert_alphanumeric(input: &[u8]) -> Option<usize> {
-    // could use the usize::from_str_radix(_, 36) but 
-    // I need the last 0 and 1 digit to be "special" and so not 
-    // involved in any kind of conversion
-    let len = input.len();
-    let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
-    let mut res: String = "".to_string();
-    let mut x = 0;
-    while x < len {
-        let acc = match my_vec[x] {
-            'A' | 'a' => "065".parse::<usize>().ok(),
-            'B' | 'b' => "066".parse::<usize>().ok(),
-            'C' | 'c' => "067".parse::<usize>().ok(),
-            'D' | 'd' => "068".parse::<usize>().ok(),
-            'E' | 'e' => "069".parse::<usize>().ok(),
-            'F' | 'f' => "072".parse::<usize>().ok(),
-            'G' | 'g' => "073".parse::<usize>().ok(),
-            'H' | 'h' => "074".parse::<usize>().ok(),
-            'I' | 'i' => "075".parse::<usize>().ok(),
-            'J' | 'j' => "076".parse::<usize>().ok(),
-            'K' | 'k' => "077".parse::<usize>().ok(),
-            'L' | 'l' => "078".parse::<usize>().ok(),
-            'M' | 'm' => "079".parse::<usize>().ok(),
-            'N' | 'n' => "082".parse::<usize>().ok(),
-            'O' | 'o' => "083".parse::<usize>().ok(),
-            'P' | 'p' => "084".parse::<usize>().ok(),
-            'Q' | 'q' => "085".parse::<usize>().ok(),
-            'R' | 'r' => "086".parse::<usize>().ok(),
-            'S' | 's' => "087".parse::<usize>().ok(),
-            'T' | 't' => "088".parse::<usize>().ok(),
-            'U' | 'u' => "089".parse::<usize>().ok(),
-            'V' | 'v' => "092".parse::<usize>().ok(),
-            'W' | 'w' => "093".parse::<usize>().ok(),
-            'X' | 'x' => "094".parse::<usize>().ok(),
-            'Y' | 'y' => "095".parse::<usize>().ok(),
-            'Z' | 'z' => "096".parse::<usize>().ok(),
-            /* this part can be used to parse id that combine either letters
-            and digits, but the function enters panick mode before even reach
-            this level
-            '0' => "000".parse::<usize>().ok(), // not so sure about this
-            '1' => "001".parse::<usize>().ok(), // not so sure about this
-            '2' => "002".parse::<usize>().ok(),
-            '3' => "003".parse::<usize>().ok(),
-            '4' => "004".parse::<usize>().ok(),
-            '5' => "005".parse::<usize>().ok(),
-            '6' => "006".parse::<usize>().ok(),
-            '7' => "007".parse::<usize>().ok(),
-            '8' => "008".parse::<usize>().ok(),
-            '9' => "009".parse::<usize>().ok(),
-            */
-            _ => "042".parse::<usize>().ok(), // used for "special" character
-        };
-        res = format!("{}{}", res, acc.unwrap());
-        x = x + 1; 
+/// array to perform the conversion from symbols to usize and viceversa
+const CHARS: [&'static str; 128] = [
+    // unprintable characters, never used but they need to be here
+    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF",
+    "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN",
+    "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",
+    // printable characters, the ones that will be used
+    " ", "!", "\"", "#", "$", "%", "&", "\'", "(", ")", "*", "+", ",", "-", ".", "/", 
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", 
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", 
+    "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_", "`", 
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", 
+    "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~",
+    // even if printable, this character it's not used
+    "DEL",
+];
+
+/// function that performs the conversion from the code to the associated symbol
+/// # Example
+/// ```ignore
+///  let a: &str = "a";
+/// let a_: i32 = 97;
+/// assert_eq!(a, get_char_from_code(a_));
+/// ```
+fn get_char_from_code(c: i32) -> &'static str {
+    CHARS.get(c as usize).unwrap_or(&"")
+}
+
+/// function that performs the conversion from a symbol to the associated ascii code
+/// # Example
+/// ```ignore
+///  let a: &str = "a";
+/// let a_: usize = 97;
+/// assert_eq!(a_, get_code_from_char(a));
+/// ```
+fn get_code_from_char(c: &str) -> usize {
+   CHARS.iter().position(|&x| x == c).unwrap()
+}
+
+// TODO: add a way to display the usize file as a BString file
+// so the file it's easier to read and understand
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_print_char() {
+        let a: &str = "a";
+        let a_: i32 = 97;
+
+        assert_eq!(a, get_char_from_code(a_));
+        assert_eq!(a_, get_code_from_char(a).to_string().parse::<i32>().unwrap());
+        println!("{} = {}", a, get_char_from_code(a_));
+        println!("{} = {}", a_, get_code_from_char(a));
     }
-    Some(res.parse::<usize>().ok().unwrap())
+
+    #[test]
+    fn can_parse_string_to_usize() {
+        let s = "texthree";
+        let my_vec: Vec<char> = s.chars().collect();
+        let mut res : String = "".to_string();
+        let len = s.len();
+        let mut x = 0;
+        while x < len {
+            res = format!("{}{}", res, &get_code_from_char(&my_vec[x].to_string()).to_string());
+            x += 1;
+        }
+        match res.len() {
+            1..=20 => println!("{}\n{}", res, res.len()),
+            _ => println!("Error! the conversion of the string into usize exceeds the maximum length (20 digits)"),
+        }
+    }
+
+    #[test]
+    fn u_group_usize_iter() {
+        use crate::gfa2::GroupU;
+
+        let ugroup_: GroupU<usize, _> = GroupU::new(
+            "1".into(),
+            "16 24".into(),
+            (),
+        );
+        for name in ugroup_.iter(){
+            println!("{}", name);
+        }
+    }
+
+    
+    #[test]
+    fn o_group_usize_iter() {
+        use crate::gfa2::GroupO;
+
+        let ogroup_: GroupO<usize, _> = GroupO::new(
+            "1".into(),
+            "A+ X+ B+".into(),
+            (),
+        );
+        for (name, orientation) in ogroup_.iter(){
+            println!("{}{}", name, orientation);
+        }
+    }
+ 
+    /* this test raises the UintIdError but normally it shouldn't
+    #[test]
+    fn can_parse_gfa2_file_alphanumeric_usize() {
+        use crate::{
+            gfa2::GFA2, 
+            parser_gfa2::GFA2Parser,
+        };
+
+        let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+        let gfa2: GFA2<usize, ()> =
+            parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
+
+        println!("{}", gfa2);
+        //println!("{:#?}", parser.parse_file(&"./tests/gfa2_files/sample2.gfa"));
+    }
+    */
 }

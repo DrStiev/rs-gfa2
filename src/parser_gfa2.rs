@@ -106,7 +106,7 @@ impl GFA2ParserBuilder {
 /// // create a parser
 /// let parser: GFA2Parser<bstr::BString, ()> = GFA2Parser::new();
 /// // create a gfa2 object to store the result of the parsing
-/// let gfa2: GFA2<BString, ()> = parser.parse_file(&"test\\gfa2_files\\sample2.gfa"). unwrap();
+/// let gfa2: GFA2<BString, ()> = parser.parse_file(&"./test/gfa2_files/sample2.gfa"). unwrap();
 /// ```
 #[derive(Clone)]
 pub struct GFA2Parser<N: SegmentId, T: OptFields> {
@@ -778,18 +778,6 @@ mod tests {
     }
 
     #[test]
-    fn o_group_usize_iter() {
-        let ogroup_: GroupO<usize, _> = GroupO::new(
-            "1".into(),
-            "A+ X+ B+".into(),
-            (),
-        );
-        for (name, orientation) in ogroup_.iter(){
-            println!("{}{}", name, orientation);
-        }
-    }
-
-    #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
         let ugroup_: GroupU<BString, _> = GroupU::new(
@@ -812,18 +800,6 @@ mod tests {
         let ugroup_: GroupU<BString, _> = GroupU::new(
             "SG1".into(),
             "16 24 SG2 51_24 16_24".into(),
-            (),
-        );
-        for name in ugroup_.iter(){
-            println!("{}", name);
-        }
-    }
-
-    #[test]
-    fn u_group_usize_iter() {
-        let ugroup_: GroupU<usize, _> = GroupU::new(
-            "1".into(),
-            "16 24".into(),
             (),
         );
         for name in ugroup_.iter(){
