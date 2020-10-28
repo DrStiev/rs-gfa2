@@ -179,7 +179,7 @@ impl<T: OptFields> Fragment<BString, T> {
         send: &[u8],
         fbeg: &[u8],
         fend: &[u8],
-        alignment: BString,
+        alignment: &[u8],
     ) -> Self {
         Fragment {
             id: BString::from(id),
