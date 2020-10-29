@@ -208,6 +208,8 @@ const CHARS: [&'static str; 128] = [
     "DEL",
 ];
 
+// TODO: add a way to display a usize GFA2 object as a BString
+// using the conversion declared below
 /// function that performs the conversion from the code to the associated symbol
 /// # Example
 /// ```ignore
@@ -294,8 +296,8 @@ mod tests {
         }
     }
  
-    /* this test raises the UintIdError but normally it shouldn't
     #[test]
+    #[should_panic]
     fn can_parse_gfa2_file_alphanumeric_usize() {
         use crate::{
             gfa2::GFA2, 
@@ -309,5 +311,4 @@ mod tests {
         println!("{}", gfa2);
         //println!("{:#?}", parser.parse_file(&"./tests/gfa2_files/sample2.gfa"));
     }
-    */
 }

@@ -136,7 +136,7 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
         Default::default()
     }
 
-    pub fn parse_gfa_line(&self, bytes: &[u8]) -> GFA2Result<Line<N, T>> {
+    fn parse_gfa_line(&self, bytes: &[u8]) -> GFA2Result<Line<N, T>> {
         let line: &BStr = bytes.trim().as_ref();
 
         let mut fields = line.split_str(b"\t");
@@ -159,7 +159,7 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
         Ok(line)
     }
 
-    pub fn parse_lines<I>(&self, lines: I) -> GFA2Result<GFA2<N, T>>
+    fn parse_lines<I>(&self, lines: I) -> GFA2Result<GFA2<N, T>>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -177,6 +177,28 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
         Ok(gfa2)
     }
 
+    /// Function that return a ```Result<GFA2<N, T>, ParseError>``` object\
+    /// ```N = GFA2 type```\
+    /// ```T = OptionalFields or ()```
+    /// # Examples
+    /// ```ignore
+    /// use gfa2::parser_gfa2::GFA2Parser;
+    /// use gfa2::gfa2::GFA2;
+    /// 
+    /// let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
+    /// let gfa2: GFA2<BString, ()> =
+    ///     parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
+    /// 
+    /// println!("{}", gfa2);
+    /// 
+    /// /*
+    /// H       aa:i:15
+    /// H       VN:Z:2.0    TS:i:15
+    /// S       3       21      TGCAACGTATAGACTTGTCAC   RC:i:4  KC:i:485841 LN:i:1329
+    /// E       *       1+      2+      3       8$      0       5       0,2,4TS:i:2  zz:Z:tag    vo:J:{"labels":false}
+    /// */
+    /// 
+    /// ```
     pub fn parse_file<P: AsRef<std::path::Path>>(
         &self,
         path: P,
