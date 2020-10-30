@@ -774,7 +774,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GFA2<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f, 
-            "\n{}{}{}{}{}{}{}",
+            "{}{}{}{}{}{}{}",
             self.headers.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
             self.segments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
             self.fragments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
