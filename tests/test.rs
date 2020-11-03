@@ -1,6 +1,8 @@
 use gfa2::{
     gfa2::GFA2,
+    gfa1::GFA,
     parser_gfa2::GFA2Parser,
+    parser_gfa1::{GFAParser, GFAParserLineIter},
     tag::OptionalFields,
 };
 use bstr::BString;
@@ -149,4 +151,55 @@ fn can_parse_big_file() {
         GroupO lines: {}\n
         GroupU lines: {}\n",
         head, seg, frag, edge, gap, ogroup, ugroup);
+}
+
+#[test]
+fn can_parse_gfa_lines() {
+    let parser = GFAParser::new();
+    let gfa: GFA<BString, ()> =
+        parser.parse_file(&"./tests/gfa1_files/lil.gfa").unwrap();
+
+    let num_segs = gfa.segments.len();
+    let num_links = gfa.links.len();
+    let num_paths = gfa.paths.len();
+    let num_conts = gfa.containments.len();
+
+    assert_eq!(num_segs, 15);
+    assert_eq!(num_links, 20);
+    assert_eq!(num_conts, 0);
+    assert_eq!(num_paths, 3);
+
+    println!("{}", gfa);
+}
+
+#[test]
+fn gfa_usize_parser() {
+    let usize_parser: GFAParser<usize, OptionalFields> = GFAParser::new();
+    let usize_gfa = usize_parser.parse_file(&"./tests/gfa1_files/diatom.gfa");
+    
+    assert!(!usize_gfa.is_err())
+}
+
+#[test]
+fn gfa_parser_line_iter() {
+    use {
+        bstr::io::BufReadExt,
+        std::{fs::File, io::BufReader},
+    };
+
+    let parser: GFAParser<usize, ()> = GFAParser::new();
+    let file = File::open(&"./tests/gfa1_files/lil.gfa").unwrap();
+    let lines = BufReader::new(file).byte_lines().map(|x| x.unwrap());
+    let parser_iter = GFAParserLineIter::from_parser(parser, lines);
+
+    let segment_names = parser_iter
+        .filter_map(|line| {
+            let line = line.ok()?;
+            let seg = line.some_segment()?;
+
+            Some(seg.name)
+        })
+        .collect::<Vec<_>>();
+
+    assert_eq!(segment_names, (1..=15).into_iter().collect::<Vec<_>>());
 }

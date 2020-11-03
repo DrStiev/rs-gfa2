@@ -1,6 +1,6 @@
 pub use crate::parser_gfa2::error::{
-    GFA2FieldResult, 
-    GFA2Result, 
+    GFAFieldResult, 
+    GFAResult, 
     ParseError, 
     ParseFieldError,
     ParserTolerance,
@@ -128,7 +128,7 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
         Default::default()
     }
 
-    pub fn parse_gfa_line(&self, bytes: &[u8]) -> GFA2Result<Line<N, T>> {
+    pub fn parse_gfa_line(&self, bytes: &[u8]) -> GFAResult<Line<N, T>> {
         let line: &BStr = bytes.trim().as_ref();
 
         let mut fields = line.split_str(b"\t");
@@ -153,7 +153,7 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
         Ok(line)
     }
 
-    pub fn parse_lines<I>(&self, lines: I) -> GFA2Result<GFA<N, T>>
+    pub fn parse_lines<I>(&self, lines: I) -> GFAResult<GFA<N, T>>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -228,7 +228,7 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    type Item = GFA2Result<Line<N, T>>;
+    type Item = GFAResult<Line<N, T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let next_line = self.iter.next()?;
@@ -246,7 +246,7 @@ where
 {
 }
 
-fn next_field<I, P>(mut input: I) -> GFA2FieldResult<P>
+fn next_field<I, P>(mut input: I) -> GFAFieldResult<P>
 where
     I: Iterator<Item = P>,
     P: AsRef<[u8]>,
@@ -254,7 +254,7 @@ where
     input.next().ok_or(ParseFieldError::MissingFields)
 }
 
-fn parse_orientation<I>(mut input: I) -> GFA2FieldResult<Orientation>
+fn parse_orientation<I>(mut input: I) -> GFAFieldResult<Orientation>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -271,7 +271,7 @@ impl<T: OptFields> Header<T> {
     }
 
     #[inline]
-    fn parse_line<I>(mut input: I) -> GFA2FieldResult<Self>
+    fn parse_line<I>(mut input: I) -> GFAFieldResult<Self>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -293,7 +293,7 @@ impl<T: OptFields> Header<T> {
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
-fn parse_overlap<I>(input: &mut I) -> GFA2FieldResult<BString>
+fn parse_overlap<I>(input: &mut I) -> GFAFieldResult<BString>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -308,7 +308,7 @@ where
         .ok_or(ParseFieldError::InvalidField("Overlap"))
 }
 
-fn parse_sequence<I>(input: &mut I) -> GFA2FieldResult<BString>
+fn parse_sequence<I>(input: &mut I) -> GFAFieldResult<BString>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -330,7 +330,7 @@ impl<N: SegmentId, T: OptFields> Segment<N, T> {
     }
 
     #[inline]
-    fn parse_line<I>(mut input: I) -> GFA2FieldResult<Self>
+    fn parse_line<I>(mut input: I) -> GFAFieldResult<Self>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -353,7 +353,7 @@ impl<N: SegmentId, T: OptFields> Link<N, T> {
     }
 
     #[inline]
-    fn parse_line<I>(mut input: I) -> GFA2FieldResult<Self>
+    fn parse_line<I>(mut input: I) -> GFAFieldResult<Self>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -383,7 +383,7 @@ impl<N: SegmentId, T: OptFields> Containment<N, T> {
     }
 
     #[inline]
-    fn parse_line<I>(mut input: I) -> GFA2FieldResult<Self>
+    fn parse_line<I>(mut input: I) -> GFAFieldResult<Self>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -411,7 +411,7 @@ impl<N: SegmentId, T: OptFields> Containment<N, T> {
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
-fn parse_path_overlap<I>(input: &mut I) -> GFA2FieldResult<BString>
+fn parse_path_overlap<I>(input: &mut I) -> GFAFieldResult<BString>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -434,7 +434,7 @@ impl<N: SegmentId, T: OptFields> Path<N, T> {
     }
 
     #[inline]
-    fn parse_line<I>(mut input: I) -> GFA2FieldResult<Self>
+    fn parse_line<I>(mut input: I) -> GFAFieldResult<Self>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,
@@ -463,7 +463,7 @@ mod tests {
             optional: (),
         };
 
-        let result: GFA2FieldResult<Header<()>> =
+        let result: GFAFieldResult<Header<()>> =
             Header::parse_line([hdr].iter());
 
         match result {
@@ -539,57 +539,6 @@ mod tests {
     }
 
     #[test]
-    fn can_parse_gfa_lines() {
-        let parser = GFAParser::new();
-        let gfa: GFA<BString, ()> =
-            parser.parse_file(&"./tests/gfa1_files/lil.gfa").unwrap();
-
-        let num_segs = gfa.segments.len();
-        let num_links = gfa.links.len();
-        let num_paths = gfa.paths.len();
-        let num_conts = gfa.containments.len();
-
-        assert_eq!(num_segs, 15);
-        assert_eq!(num_links, 20);
-        assert_eq!(num_conts, 0);
-        assert_eq!(num_paths, 3);
-
-        println!("{}", gfa);
-    }
-
-    #[test]
-    fn gfa_usize_parser() {
-        let usize_parser: GFAParser<usize, OptionalFields> = GFAParser::new();
-        let usize_gfa = usize_parser.parse_file(&"./tests/gfa1_files/diatom.gfa");
-        
-        assert!(!usize_gfa.is_err())
-    }
-
-    #[test]
-    fn gfa_parser_line_iter() {
-        use {
-            bstr::io::BufReadExt,
-            std::{fs::File, io::BufReader},
-        };
-
-        let parser: GFAParser<usize, ()> = GFAParser::new();
-        let file = File::open(&"./tests/gfa1_files/lil.gfa").unwrap();
-        let lines = BufReader::new(file).byte_lines().map(|x| x.unwrap());
-        let parser_iter = GFAParserLineIter::from_parser(parser, lines);
-
-        let segment_names = parser_iter
-            .filter_map(|line| {
-                let line = line.ok()?;
-                let seg = line.some_segment()?;
-
-                Some(seg.name)
-            })
-            .collect::<Vec<_>>();
-
-        assert_eq!(segment_names, (1..=15).into_iter().collect::<Vec<_>>());
-    }
-
-    #[test]
     fn segment_parser() {
         use OptFieldVal::*;
         let name = "11";
@@ -611,7 +560,7 @@ mod tests {
         .into_iter()
         .collect();
 
-        let segment_1: GFA2FieldResult<Segment<BString, ()>> =
+        let segment_1: GFAFieldResult<Segment<BString, ()>> =
             Segment::parse_line(fields.clone());
 
         assert!(segment_1.is_ok());

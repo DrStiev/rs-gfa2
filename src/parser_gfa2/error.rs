@@ -5,6 +5,9 @@ use bstr::ByteSlice;
 pub type GFA2FieldResult<T> = Result<T, ParseFieldError>;
 pub type GFA2Result<T> = Result<T, ParseError>;
 
+pub type GFAFieldResult<T> = Result<T, ParseFieldError>;
+pub type GFAResult<T> = Result<T, ParseError>;
+
 #[derive(Debug, Clone, Copy)]
 pub enum ParserTolerance {
     IgnoreAll,
