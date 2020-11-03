@@ -377,25 +377,6 @@ impl<N: SegmentId, T: OptFields> Segment<N, T> {
     }
 }
 
-/*
-/// function that parses the reference tag
-/// ```<reference> <- [!-~]+[+-]```
-fn parse_reference<I>(input: &mut I) -> GFA2FieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Reference"))
-}
-*/
-
 /// function that parses the pos tag of the fragment element
 /// ```<pos> <- {-}[0-9]+{$}```
 fn parse_pos<I>(input: &mut I) -> GFA2FieldResult<BString>

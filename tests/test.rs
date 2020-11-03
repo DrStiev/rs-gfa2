@@ -77,10 +77,26 @@ fn can_parse_gfa2_file_asterix_usize() {
 #[test]
 fn can_parse_gfa2_graph() {
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
-    let _gfa2: GFA2<BString, OptionalFields> =
+    let gfa2: GFA2<BString, OptionalFields> =
         parser.parse_file(&"./tests/gfa2_files/graph.gfa").unwrap();
 
-    // println!("{}", gfa2);
+    let head = gfa2.headers.len();
+    let seg = gfa2.segments.len(); // 61
+    let frag = gfa2.fragments.len(); //11
+    let edge = gfa2.edges.len(); // 84
+    let gap = gfa2.gaps.len(); //2
+    let ogroup = gfa2.groups_o.len(); // 2
+    let ugroup = gfa2.groups_u.len(); // 2
+
+    println!(
+    "Header lines: {}\n
+    Segment lines: {}\n 
+    Fragment lines: {}\n
+    Edge lines: {}\n
+    Gap lines: {}\n
+    GroupO lines: {}\n
+    GroupU lines: {}\n",
+        head, seg, frag, edge, gap, ogroup, ugroup);
 }
 
 #[test]
@@ -106,4 +122,31 @@ fn can_parse_gfa2_with_multiple_tag() {
     assert_eq!(ugroup, 0);
 
     println!("{}", gfa2);
+}
+
+#[test]
+#[ignore]
+fn can_parse_big_file() {
+    // parsing file, about 7 minutes
+    let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
+    let gfa2: GFA2<BString, OptionalFields> =
+        parser.parse_file(&"./tests/big_files/ape-4-0.10b.gfa2").unwrap();
+
+    let head = gfa2.headers.len();
+    let seg = gfa2.segments.len(); // 715018
+    let frag = gfa2.fragments.len();
+    let edge = gfa2.edges.len(); // 985462
+    let gap = gfa2.gaps.len();
+    let ogroup = gfa2.groups_o.len();
+    let ugroup = gfa2.groups_u.len();
+
+    println!(
+        "Header lines: {}\n
+        Segment lines: {}\n 
+        Fragment lines: {}\n
+        Edge lines: {}\n
+        Gap lines: {}\n
+        GroupO lines: {}\n
+        GroupU lines: {}\n",
+        head, seg, frag, edge, gap, ogroup, ugroup);
 }
