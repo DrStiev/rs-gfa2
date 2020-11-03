@@ -199,7 +199,7 @@ fn get_char_from_code(c: i32) -> &'static str {
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```
 fn get_code_from_char(c: &str) -> usize {
-    if c.parse::<i64>().is_ok() {
+    if c.parse::<u64>().is_ok() {
         c.parse::<usize>().unwrap()
     } else {
         CHARS.iter().position(|&x| x == c).unwrap()

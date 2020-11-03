@@ -60,7 +60,7 @@ fn can_parse_gfa2_file_with_no_tag() {
 fn can_parse_gfa2_file_usize() {
     let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
     let gfa2: GFA2<usize, ()> =
-        parser.parse_file(&"./tests/gfa2_files/irl.gfa").unwrap();
+        parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
 
     println!("{}", gfa2);
 }
