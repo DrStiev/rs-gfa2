@@ -410,21 +410,38 @@ impl<N: SegmentId, T: OptFields> Containment<N, T> {
 }
 
 /// function that parses the overlap tag
-/// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
+/// ```<overlap> <- * | <CIGAR> <- [0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*```
 fn parse_path_overlap<I>(input: &mut I) -> GFAFieldResult<BString>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        // it's a little trick but ok
-        static ref RE: Regex = Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=],?)+").unwrap();
+        static ref RE: Regex = Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
     }
 
     let next = next_field(input)?;
     RE.find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Overlap"))
+}
+
+/// function that parses the segment names tag
+/// ```<overlap> <- * | <CIGAR> <- [!-~]+(,[!-~]+)*```
+fn parse_segment_names<I>(input: &mut I) -> GFAFieldResult<BString>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        // that's a little meh but still ok
+        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
+    }
+
+    let next = next_field(input)?;
+    RE.find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Segment names"))
 }
 
 impl<N: SegmentId, T: OptFields> Path<N, T> {
@@ -442,8 +459,7 @@ impl<N: SegmentId, T: OptFields> Path<N, T> {
         // Use the SegmentId parser for the path name as well; it's
         // just always BString
         let path_name = BString::parse_next(&mut input)?;
-        let segment_names =
-            next_field(&mut input).map(|bs| BString::from(bs.as_ref()))?;
+        let segment_names = parse_segment_names(&mut input)?;
         let overlaps = parse_path_overlap(&mut input)?;
         let optional = T::parse(input);
 
