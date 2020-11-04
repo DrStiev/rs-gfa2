@@ -484,7 +484,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
             f,
             "O\t{}\t{}\t{}",
             self.id,
-            self.var_field.as_bstr().to_string() + " ",
+            self.var_field.as_bstr().to_string(),
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
@@ -580,7 +580,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
             f,
             "U\t{}\t{}\t{}",
             self.id,
-            self.var_field.as_bstr().to_string() + " ",
+            self.var_field.as_bstr().to_string(),
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }

@@ -534,7 +534,10 @@ mod tests {
             Err(_) => {
                 panic!("Error parsing path");
             }
-            Ok(p) => assert_eq!(p, path_),
+            Ok(p) => {
+                println!("{}", p.clone());
+                assert_eq!(p, path_)
+            },
         }
     }
 

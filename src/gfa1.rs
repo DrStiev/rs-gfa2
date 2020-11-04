@@ -484,8 +484,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Path<N, T> {
             f,
             "P\t{}\t{}\t{}\t{}",
             self.path_name,
-            self.segment_names.as_bstr().to_string() + ",",
-            self.overlaps.as_bstr().to_string() + ",",
+            self.segment_names.as_bstr().to_string(),
+            self.overlaps.as_bstr().to_string(),
             opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
