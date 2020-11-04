@@ -173,7 +173,7 @@ impl<N: SegmentId, T: OptFields> GFA<N, T> {
 /// let header = "VN:Z:1.0";
 /// let header_ = Header {
 ///     version: Some("VN:Z:1.0".into()),
-///     tag: (),
+///     optional: (),
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
