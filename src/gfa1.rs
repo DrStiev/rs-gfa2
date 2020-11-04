@@ -191,6 +191,15 @@ impl<T: OptFields> Default for Header<T> {
     }
 }
 
+impl<T: OptFields> Header<T> {
+    pub fn new(version: Option<BString>) -> Self {
+        Header {
+            version: version,
+            optional: Default::default(),
+        }
+    }
+}
+
 impl<T: OptFields> fmt::Display for Header<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
