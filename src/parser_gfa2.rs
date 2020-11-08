@@ -1,18 +1,12 @@
 pub mod error;
-pub use self::error::{
-    GFA2FieldResult, 
-    GFA2Result, 
-    ParseError, 
-    ParseFieldError,
-};
+pub use self::error::{GFA2FieldResult, GFA2Result, ParseError, ParseFieldError};
 
+use crate::{gfa2::*, tag::*};
 use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
-use crate::{gfa2::*, tag::*};
 
 use crate::parser_gfa2::error::ParserTolerance;
-
 
 /// Builder struct for GFAParsers
 pub struct GFA2ParserBuilder {
@@ -95,14 +89,14 @@ impl GFA2ParserBuilder {
 }
 
 /// return a GFA2Parser object
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
 /// use parser_gfa2::GFA2Parser;
-/// 
+///
 /// // create a parser
 /// let parser: GFA2Parser<bstr::BString, ()> = GFA2Parser::new();
 /// // create a gfa2 object to store the result of the parsing
@@ -142,8 +136,7 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line =
-            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
             b"H" if self.headers => Header::parse_line(fields).map(Header::wrap),
@@ -184,33 +177,35 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
     /// ```ignore
     /// use gfa2::parser_gfa2::GFA2Parser;
     /// use gfa2::gfa2::GFA2;
-    /// 
+    ///
     /// let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
     /// let gfa2: GFA2<BString, ()> =
     ///     parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
-    /// 
+    ///
     /// println!("{}", gfa2);
-    /// 
+    ///
     /// /*
     /// H       aa:i:15
     /// H       VN:Z:2.0    TS:i:15
     /// S       3       21      TGCAACGTATAGACTTGTCAC   RC:i:4  KC:i:485841 LN:i:1329
     /// E       *       1+      2+      3       8$      0       5       0,2,4TS:i:2  zz:Z:tag    vo:J:{"labels":false}
     /// */
-    /// 
+    ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-    ) -> Result<GFA2<N, T>, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA2<N, T>, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
         };
         // use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+        use std::ffi::OsStr;
 
-        let file = File::open(path)?;
+        let file = File::open(path.as_ref())?;
         //let len = std::fs::metadata(path)?.len();
+        match path.as_ref().extension().and_then(OsStr::to_str).unwrap() {
+            "gfa2" | "gfa" => (),
+            _ => return Err(ParseError::ExtensionError()),
+        }
         let lines = BufReader::new(file).byte_lines();
         let mut gfa2 = GFA2::new();
 
@@ -221,8 +216,10 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
             "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
         ));
         */
-        
-        for line in lines/*.progress_with(pb)*/ {
+
+        for line in lines
+        /*.progress_with(pb)*/
+        {
             let line = line?;
             match self.parse_gfa_line(line.as_ref()) {
                 Ok(parsed) => gfa2.insert_line(parsed),
@@ -308,20 +305,16 @@ impl<T: OptFields> Header<T> {
         let next = next_field(&mut input)?;
         let version = OptField::parse(next.as_ref());
         let version2 = version.clone();
-        let version =
-            if let Some(OptFieldVal::Z(version)) = version.map(|v| v.value) {
-                Some(version)
-            } else if let Some(OptFieldVal::I(version2)) = version2.map(|v| v.value) {
-                Some(version2)
-            } else {
-                None
-            };
+        let version = if let Some(OptFieldVal::Z(version)) = version.map(|v| v.value) {
+            Some(version)
+        } else if let Some(OptFieldVal::I(version2)) = version2.map(|v| v.value) {
+            Some(version2)
+        } else {
+            None
+        };
         let tag = T::parse(input);
 
-        Ok(Header { 
-            version, 
-            tag,
-         })
+        Ok(Header { version, tag })
     }
 }
 
@@ -342,7 +335,7 @@ where
         .ok_or(ParseFieldError::InvalidField("Sequence"))
 }
 
-/// function that parses the slen tag of the segment element 
+/// function that parses the slen tag of the segment element
 /// ```<int> <- {-}[0-9]+```
 fn parse_slen<I>(input: &mut I) -> GFA2FieldResult<BString>
 where
@@ -411,7 +404,8 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)").unwrap();
+        static ref RE: Regex =
+            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)").unwrap();
     }
 
     let next = next_field(input)?;
@@ -650,7 +644,6 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -661,7 +654,7 @@ mod tests {
         let header_ = Header {
             // the version field of the header object is used to store
             // the entire header tag without the optional (tag)*
-            version: Some("VN:Z:2.0".into()), 
+            version: Some("VN:Z:2.0".into()),
             tag: (),
         };
 
@@ -680,13 +673,13 @@ mod tests {
             id: "A".into(),
             len: "10".into(),
             sequence: "AAAAAAACGT".into(),
-            tag:(),
+            tag: (),
         };
 
         let fields = segment.split_terminator('\t');
         let result = Segment::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(s) => assert_eq!(s, segment_),
         }
@@ -703,13 +696,13 @@ mod tests {
             fbeg: "20".into(),
             fend: "20".into(),
             alignment: "*".into(),
-            tag:(),
+            tag: (),
         };
 
         let fields = fragment.split_terminator('\t');
         let result = Fragment::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(f) => assert_eq!(f, fragment_),
         }
@@ -727,13 +720,13 @@ mod tests {
             beg2: "0".into(),
             end2: "60".into(),
             alignment: "60M".into(),
-            tag:(),
+            tag: (),
         };
 
         let fields = edge.split_terminator('\t');
         let result = Edge::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(e) => assert_eq!(e, edge_),
         }
@@ -747,13 +740,13 @@ mod tests {
             sid2: "22+".into(),
             dist: "10".into(),
             var: "*".into(),
-            tag:(),
+            tag: (),
         };
 
         let fields = gap.split_terminator('\t');
         let result = Gap::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(g) => assert_eq!(g, gap_),
         }
@@ -762,32 +755,26 @@ mod tests {
     #[test]
     fn can_parse_ogroup() {
         let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-        let ogroup_: GroupO<BString, _> = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            (),
-        );
-       
+        let ogroup_: GroupO<BString, _> =
+            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), ());
+
         let fields = ogroup.split_terminator('\t');
         let result = GroupO::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error {}", why),
             Ok(o) => {
                 println!("{}", o.clone());
                 assert_eq!(o, ogroup_)
-            },
+            }
         }
     }
 
     #[test]
     fn o_group_iter() {
-        let ogroup_: GroupO<BString, _> = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            (),
-        );
-        for (name, orientation) in ogroup_.iter(){
+        let ogroup_: GroupO<BString, _> =
+            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), ());
+        for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }
     }
@@ -795,32 +782,26 @@ mod tests {
     #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-        let ugroup_: GroupU<BString, _> = GroupU::new(
-            "SG1".into(),
-            "16 24 SG2 51_24 16_24".into(),
-            (),
-        );
+        let ugroup_: GroupU<BString, _> =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), ());
 
         let fields = ugroup.split_terminator('\t');
         let result = GroupU::parse_line(fields);
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
                 println!("{}", u.clone());
                 assert_eq!(u, ugroup_)
-            },
+            }
         }
     }
 
     #[test]
     fn u_group_iter() {
-        let ugroup_: GroupU<BString, _> = GroupU::new(
-            "SG1".into(),
-            "16 24 SG2 51_24 16_24".into(),
-            (),
-        );
-        for name in ugroup_.iter(){
+        let ugroup_: GroupU<BString, _> =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), ());
+        for name in ugroup_.iter() {
             println!("{}", name);
         }
     }
@@ -830,12 +811,17 @@ mod tests {
         let cigar = vec!["1M1I1M1I2M"];
         let result = parse_alignment(&mut cigar.iter());
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
-                assert_eq!(cigar.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                assert_eq!(
+                    cigar
+                        .iter()
+                        .fold(String::new(), |acc, str| acc + &str.to_string()),
+                    u
+                );
                 println!("{}", u);
-            },
+            }
         }
     }
 
@@ -844,12 +830,17 @@ mod tests {
         let trace = vec!["0,2,4"];
         let result = parse_alignment(&mut trace.iter());
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
-                assert_eq!(trace.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                assert_eq!(
+                    trace
+                        .iter()
+                        .fold(String::new(), |acc, str| acc + &str.to_string()),
+                    u
+                );
                 println!("{}", u);
-            },
+            }
         }
     }
 
@@ -858,12 +849,17 @@ mod tests {
         let no_aligment = vec!["*"];
         let result = parse_alignment(&mut no_aligment.iter());
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
-                assert_eq!(no_aligment.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                assert_eq!(
+                    no_aligment
+                        .iter()
+                        .fold(String::new(), |acc, str| acc + &str.to_string()),
+                    u
+                );
                 println!("{}", u);
-            },
+            }
         }
     }
 
@@ -873,12 +869,17 @@ mod tests {
         let error = vec!["ERROR"];
         let result = parse_alignment(&mut error.iter());
 
-        match result{
+        match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
-                assert_eq!(error.iter().fold(String::new(), |acc, str| acc + &str.to_string()), u);
+                assert_eq!(
+                    error
+                        .iter()
+                        .fold(String::new(), |acc, str| acc + &str.to_string()),
+                    u
+                );
                 println!("{}", u);
-            },
+            }
         }
     }
 }

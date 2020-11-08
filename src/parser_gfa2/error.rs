@@ -1,6 +1,6 @@
+use bstr::ByteSlice;
 /// define a custom error for the GFA2 format
 use std::{error, fmt};
-use bstr::ByteSlice;
 
 pub type GFA2FieldResult<T> = Result<T, ParseFieldError>;
 pub type GFA2Result<T> = Result<T, ParseError>;
@@ -70,21 +70,11 @@ impl fmt::Display for ParseFieldError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ParseFieldError as PFE;
         match self {
-            PFE::UintIdError => {
-                write!(f, "Failed to parse a segment ID as an unsigned integer")
-            }
-            PFE::Utf8Error => {
-                write!(f, "Failed to parse a bytestring as a UTF-8 string")
-            }
-            PFE::ParseFromStringError => {
-                write!(f, "Failed to parse a field from a string")
-            }
-            PFE::OrientationError => {
-                write!(f, "Failed to parse an orientation character")
-            }
-            PFE::InvalidField(field) => {
-                write!(f, "Failed to parse field `{}`", field)
-            }
+            PFE::UintIdError => write!(f, "Failed to parse a segment ID as an unsigned integer"),
+            PFE::Utf8Error => write!(f, "Failed to parse a bytestring as a UTF-8 string"),
+            PFE::ParseFromStringError => write!(f, "Failed to parse a field from a string"),
+            PFE::OrientationError => write!(f, "Failed to parse an orientation character"),
+            PFE::InvalidField(field) => write!(f, "Failed to parse field `{}`", field),
             PFE::MissingFields => write!(f, "Line is missing required fields"),
             PFE::Unknown => write!(f, "Unknown error when parsing a field"),
         }
@@ -96,7 +86,7 @@ impl error::Error for ParseFieldError {}
 /// Type encapsulating different kinds of GFA parsing errors
 #[derive(Debug)]
 pub enum ParseError {
-    /// The line type was something other than 'H', 'S', 'F', 'E', 
+    /// The line type was something other than 'H', 'S', 'F', 'E',
     /// 'G', 'O' or 'U'. This is ignored by the file parser rather than a fail
     /// condition.
     UnknownLineType,
@@ -109,6 +99,7 @@ pub enum ParseError {
     InvalidField(ParseFieldError),
     /// Wrapper for an IO error.
     IOError(std::io::Error),
+    ExtensionError(),
     Unknown,
 }
 
@@ -116,17 +107,17 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ParseError as PE;
         match self {
-            PE::UnknownLineType => {
-                write!(f, "Line type was not one of 'H', 'S', 'F', 'E', 'G', 'O' or 'U'")
-            }
+            PE::UnknownLineType => write!(
+                f,
+                "Line type was not one of 'H', 'S', 'F', 'E', 'G', 'O' or 'U'"
+            ),
             PE::EmptyLine => write!(f, "Line was empty"),
             PE::InvalidLine(field_err, line) => {
                 write!(f, "Failed to parse line {}, error: {}", line, field_err)
             }
-            PE::InvalidField(field_err) => {
-                write!(f, "Failed to parse field: {}", field_err)
-            }
+            PE::InvalidField(field_err) => write!(f, "Failed to parse field: {}", field_err),
             PE::IOError(err) => write!(f, "IO error: {}", err),
+            PE::ExtensionError() => write!(f, "Extension not correct!"),
             PE::Unknown => write!(f, "Unknown error when parsing a line"),
         }
     }

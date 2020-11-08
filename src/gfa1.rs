@@ -1,7 +1,7 @@
 pub use crate::gfa2::{orientation::*, traits::*};
 use crate::tag::*;
 
-use bstr::{BStr, ByteSlice, BString};
+use bstr::{BStr, BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -10,11 +10,11 @@ use std::fmt;
 
 /// Simple representation of a parsed GFA file, using a Vec<T> to
 /// store each separate GFA line type.\
-/// Returns a GFA object 
-/// 
+/// Returns a GFA object
+///
 /// # Examples
 /// ```ignore
-/// 
+///
 /// let gfa: GFA<BString, OptionalFields> = GFA {
 ///     headers: vec![
 ///         Header::new(Some("VN:Z:1.0".into())),
@@ -45,13 +45,23 @@ pub struct GFA<N, T: OptFields> {
 impl<N: SegmentId, T: OptFields> fmt::Display for GFA<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
-            f, 
+            f,
             "{}{}{}{}{}",
-            self.headers.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.segments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.links.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.containments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.paths.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.headers
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.segments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.links
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.containments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.paths
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
         )
     }
 }
@@ -165,11 +175,11 @@ impl<N: SegmentId, T: OptFields> GFA<N, T> {
 }
 
 /// The header line of a GFA graph
-/// /// Returns an Header line 
-/// 
+/// /// Returns an Header line
+///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple header 
+/// // inizialize a simple header
 /// let header = "VN:Z:1.0";
 /// let header_ = Header {
 ///     version: Some("VN:Z:1.0".into()),
@@ -194,7 +204,7 @@ impl<T: OptFields> Default for Header<T> {
 impl<T: OptFields> Header<T> {
     pub fn new(version: Option<BString>) -> Self {
         Header {
-            version: version,
+            version,
             optional: Default::default(),
         }
     }
@@ -203,7 +213,7 @@ impl<T: OptFields> Header<T> {
 impl<T: OptFields> fmt::Display for Header<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.optional.fields(){
+        for tag in self.optional.fields() {
             opt.push(tag);
         }
         if let Some(v) = &self.version {
@@ -211,21 +221,22 @@ impl<T: OptFields> fmt::Display for Header<T> {
                 f,
                 "H\t{}\t{}",
                 v,
-                opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+                opt.iter()
+                    .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
             )
         } else {
             write!(f, "H")
-        }        
-    }  
+        }
+    }
 }
 
 /// A segment in a GFA graph. Generic over the name type, but
 /// currently the parser is only defined for N = BString
-/// Returns a Segment line 
-/// 
+/// Returns a Segment line
+///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple segment 
+/// // inizialize a simple segment
 /// let segment = "1\tAAAAAAACGT";
 /// let segment_: Segment<BString, _> = Segment {
 ///     name: "1".into(),
@@ -233,9 +244,7 @@ impl<T: OptFields> fmt::Display for Header<T> {
 ///     optional:(),
 /// };
 /// ```
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Segment<N, T: OptFields> {
     pub name: N,
     pub sequence: BString,
@@ -255,7 +264,7 @@ impl<T: OptFields> Segment<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.optional.fields(){
+        for tag in self.optional.fields() {
             opt.push(tag);
         }
         write!(
@@ -263,16 +272,17 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
             "S\t{}\t{}\t{}",
             self.name,
             self.sequence.as_bstr(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns a Link line 
-/// 
+/// Returns a Link line
+///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple link 
+/// // inizialize a simple link
 /// let link = "15\t-\t10\t+\t20M";
 /// let link_: Link<BString, _> = Link {
 ///     from_segment: "15".into(),
@@ -283,9 +293,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
 ///     optional:(),
 /// };
 /// ```
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Link<N, T: OptFields> {
     pub from_segment: N,
     pub from_orient: Orientation,
@@ -317,7 +325,7 @@ impl<T: OptFields> Link<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Link<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.optional.fields(){
+        for tag in self.optional.fields() {
             opt.push(tag);
         }
         write!(
@@ -328,16 +336,17 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Link<N, T> {
             self.to_segment,
             self.to_orient,
             self.overlap,
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns a Containment line 
-/// 
+/// Returns a Containment line
+///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple link 
+/// // inizialize a simple link
 /// let containment = "15\t-\t10\t+\t4\t20M";
 /// let containment_: Containment<BString, _> = Containment {
 ///     container_name: "15".into(),
@@ -349,9 +358,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Link<N, T> {
 ///     optional:(),
 /// };
 /// ```
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Containment<N, T: OptFields> {
     pub container_name: N,
     pub container_orient: Orientation,
@@ -365,7 +372,7 @@ pub struct Containment<N, T: OptFields> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Containment<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.optional.fields(){
+        for tag in self.optional.fields() {
             opt.push(tag);
         }
         write!(
@@ -377,7 +384,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Containment<N, T> {
             self.contained_orient,
             self.pos,
             self.overlap,
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
@@ -385,10 +393,10 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Containment<N, T> {
 /// The step list that the path actually consists of is an unparsed
 /// BString to keep memory down; use path.iter() to get an iterator
 /// over the parsed path segments and orientations.\
-/// Returns a Path line 
+/// Returns a Path line
 /// # Examples
 /// ```ignore
-/// // inizialize a simple o-group 
+/// // inizialize a simple o-group
 /// let path = "14\t11+,12-,13+\t4M,5M";
 /// let path_: Path<BString, _> = Path::new(
 ///     "14".into(),
@@ -397,9 +405,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Containment<N, T> {
 ///     (),
 /// );
 /// ```
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Path<N, T: OptFields> {
     pub path_name: BString,
     pub segment_names: BString,
@@ -409,12 +415,7 @@ pub struct Path<N, T: OptFields> {
 }
 
 impl<N: SegmentId, T: OptFields> Path<N, T> {
-    pub fn new(
-        path_name: BString,
-        segment_names: BString,
-        overlaps: BString,
-        optional: T,
-    ) -> Self {
+    pub fn new(path_name: BString, segment_names: BString, overlaps: BString, optional: T) -> Self {
         Path {
             path_name,
             segment_names,
@@ -465,9 +466,7 @@ impl<T: OptFields> Path<BString, T> {
 impl<T: OptFields> Path<usize, T> {
     /// Produces an iterator over the usize segments of the given
     /// path.
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.segment_names
             .split_str(b",")
             .filter_map(Self::parse_segment_id)
@@ -477,7 +476,7 @@ impl<T: OptFields> Path<usize, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Path<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.optional.fields(){
+        for tag in self.optional.fields() {
             opt.push(tag);
         }
         write!(
@@ -486,7 +485,8 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Path<N, T> {
             self.path_name,
             self.segment_names.as_bstr().to_string(),
             self.overlaps.as_bstr().to_string(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
@@ -511,8 +511,7 @@ mod tests {
 
     #[test]
     fn gfa_line_ref_iter() {
-        let parser: crate::parser_gfa1::GFAParser<usize, ()> =
-            crate::parser_gfa1::GFAParser::new();
+        let parser: crate::parser_gfa1::GFAParser<usize, ()> = crate::parser_gfa1::GFAParser::new();
         let gfa = parser.parse_file(&"./tests/gfa1_files/lil.gfa").unwrap();
         let gfa_lineref = gfa.lines_iter();
 

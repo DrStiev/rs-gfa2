@@ -1,18 +1,19 @@
+use bstr::BString;
 use gfa2::{
-    gfa2::GFA2,
     gfa1::GFA,
-    parser_gfa2::GFA2Parser,
+    gfa2::GFA2,
     parser_gfa1::{GFAParser, GFAParserLineIter},
+    parser_gfa2::GFA2Parser,
     tag::OptionalFields,
 };
-use bstr::BString;
- 
-#[test] 
+
+#[test]
 fn can_parse_gfa2_file_with_tag() {
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<BString, OptionalFields> =
-        parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
-    
+    let gfa2: GFA2<BString, OptionalFields> = parser
+        .parse_file(&"./tests/gfa2_files/sample2.gfa")
+        .unwrap();
+
     let head = gfa2.headers.len();
     let seg = gfa2.segments.len();
     let frag = gfa2.fragments.len();
@@ -35,8 +36,7 @@ fn can_parse_gfa2_file_with_tag() {
 #[test]
 fn can_parse_gfa2_file_with_no_tag() {
     let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
-    let gfa2: GFA2<BString, ()> =
-        parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
+    let gfa2: GFA2<BString, ()> = parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
 
     let head = gfa2.headers.len();
     let seg = gfa2.segments.len();
@@ -54,15 +54,15 @@ fn can_parse_gfa2_file_with_no_tag() {
     assert_eq!(ogroup, 2);
     assert_eq!(ugroup, 0);
 
-
     println!("{}", gfa2);
 }
 
 #[test]
 fn can_parse_gfa2_file_usize() {
     let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-    let gfa2: GFA2<usize, ()> =
-        parser.parse_file(&"./tests/gfa2_files/sample2.gfa").unwrap();
+    let gfa2: GFA2<usize, ()> = parser
+        .parse_file(&"./tests/gfa2_files/sample2.gfa")
+        .unwrap();
 
     println!("{}", gfa2);
 }
@@ -70,10 +70,18 @@ fn can_parse_gfa2_file_usize() {
 #[test]
 fn can_parse_gfa2_file_asterix_usize() {
     let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-    let gfa2: GFA2<usize, ()> =
-        parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
+    let gfa2: GFA2<usize, ()> = parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
 
     println!("{}", gfa2);
+}
+
+#[test]
+fn extension_error() {
+    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+    match parser.parse_file(&"./tests/gfa2_files/extension_error.txt") {
+        Ok(g) => println!("{}", g),
+        Err(why) => println!("Error: {}", why),
+    }
 }
 
 #[test]
@@ -91,14 +99,15 @@ fn can_parse_gfa2_graph() {
     let ugroup = gfa2.groups_u.len(); // 2
 
     println!(
-    "Header lines: {}\n
+        "Header lines: {}\n
     Segment lines: {}\n 
     Fragment lines: {}\n
     Edge lines: {}\n
     Gap lines: {}\n
     GroupO lines: {}\n
     GroupU lines: {}\n",
-        head, seg, frag, edge, gap, ogroup, ugroup);
+        head, seg, frag, edge, gap, ogroup, ugroup
+    );
 }
 
 #[test]
@@ -132,8 +141,9 @@ fn can_parse_big_file_gfa2() {
     // parsing file and counting items, about 7 minutes (WITHOUT PROGRESSBAR)
     // parsing file and counting items, about 14 minutes (WITH PROGRESSBAR)
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<BString, OptionalFields> =
-        parser.parse_file(&"./tests/big_files/ape-4-0.10b.gfa2").unwrap();
+    let gfa2: GFA2<BString, OptionalFields> = parser
+        .parse_file(&"./tests/big_files/ape-4-0.10b.gfa2")
+        .unwrap();
 
     let head = gfa2.headers.len();
     let seg = gfa2.segments.len(); // 715018
@@ -151,7 +161,8 @@ fn can_parse_big_file_gfa2() {
         Gap lines: {}\n
         GroupO lines: {}\n
         GroupU lines: {}\n",
-        head, seg, frag, edge, gap, ogroup, ugroup);
+        head, seg, frag, edge, gap, ogroup, ugroup
+    );
 }
 
 #[test]
@@ -160,13 +171,14 @@ fn can_parse_big_file_gfa1() {
     // parsing file and counting items, about 7 minutes (WITHOUT PROGRESSBAR)
     // parsing file and counting items, about 14 minutes (WITH PROGRESSBAR)
     let parser: GFAParser<BString, OptionalFields> = GFAParser::new();
-    let gfa: GFA<BString, OptionalFields> =
-        parser.parse_file(&"./tests/big_files/ape-4-0.10b.gfa").unwrap();
+    let gfa: GFA<BString, OptionalFields> = parser
+        .parse_file(&"./tests/big_files/ape-4-0.10b.gfa")
+        .unwrap();
 
     let head = gfa.headers.len();
     let seg = gfa.segments.len(); // 715018
-    let link = gfa.links.len();// 985462
-    let cont = gfa.containments.len(); 
+    let link = gfa.links.len(); // 985462
+    let cont = gfa.containments.len();
     let path = gfa.paths.len();
 
     println!(
@@ -175,14 +187,14 @@ fn can_parse_big_file_gfa1() {
         Link lines: {}\n
         Containments lines: {}\n
         Path lines: {}\n",
-        head, seg, link, cont, path);
+        head, seg, link, cont, path
+    );
 }
 
 #[test]
 fn can_parse_gfa_lines() {
     let parser = GFAParser::new();
-    let gfa: GFA<BString, ()> =
-        parser.parse_file(&"./tests/gfa1_files/lil.gfa").unwrap();
+    let gfa: GFA<BString, ()> = parser.parse_file(&"./tests/gfa1_files/lil.gfa").unwrap();
 
     let num_segs = gfa.segments.len();
     let num_links = gfa.links.len();
@@ -201,7 +213,7 @@ fn can_parse_gfa_lines() {
 fn gfa_usize_parser() {
     let usize_parser: GFAParser<usize, OptionalFields> = GFAParser::new();
     let usize_gfa = usize_parser.parse_file(&"./tests/gfa1_files/diatom.gfa");
-    
+
     assert!(!usize_gfa.is_err())
 }
 
@@ -214,8 +226,8 @@ fn can_parse_medium_file_gfa1() {
 
     let head = gfa.headers.len();
     let seg = gfa.segments.len(); // 4058
-    let link = gfa.links.len();// 10639
-    let cont = gfa.containments.len(); 
+    let link = gfa.links.len(); // 10639
+    let cont = gfa.containments.len();
     let path = gfa.paths.len(); // 7
 
     println!(
@@ -224,7 +236,8 @@ fn can_parse_medium_file_gfa1() {
         Link lines: {}\n
         Containments lines: {}\n
         Path lines: {}\n",
-        head, seg, link, cont, path);
+        head, seg, link, cont, path
+    );
 }
 
 #[test]
@@ -250,9 +263,9 @@ fn can_parse_medium_file_gfa2() {
         Gap lines: {}\n
         GroupO lines: {}\n
         GroupU lines: {}\n",
-        head, seg, frag, edge, gap, ogroup, ugroup);
+        head, seg, frag, edge, gap, ogroup, ugroup
+    );
 }
-
 
 #[test]
 fn gfa_parser_line_iter() {

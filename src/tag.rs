@@ -1,7 +1,7 @@
-/// file that tries to mimic the behaviour of the file optfields.rs 
+/// file that tries to mimic the behaviour of the file optfields.rs
 /// optfields.rs find, parse and store all the different types of
 /// optional fields associated to each kind of lines.
-/// with the format GFA2 the optional field tag is been replaced by a 
+/// with the format GFA2 the optional field tag is been replaced by a
 /// simple tag element with 0 or N occurencies.
 /// So, I don't think this file could be useful as the original.
 use bstr::BString;
@@ -55,12 +55,12 @@ impl OptField {
         OptField { tag, value }
     }
 
-    /// Parses the header and optional fields from a bytestring in the format\ 
+    /// Parses the header and optional fields from a bytestring in the format\
     /// ```<Header> <- {VN:Z:2.0}\t{TS:i:[-+]?[0-9]+}\t<tag>*```
     /// ```<tag> <- <TAG>:<TYPE>:<VALUE> <- [A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*```
     pub fn parse(input: &[u8]) -> Option<Self> {
         lazy_static! {
-            static ref RE: Regex = 
+            static ref RE: Regex =
                 Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
         }
 
@@ -70,34 +70,13 @@ impl OptField {
         let o_type = input.get(3)?;
 
         let o_val = match o_type {
-            b'A' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(A),
-            b'i' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(I),
-            b'f' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(F),
-            b'Z' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(Z),
-            b'J' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(J),
-            b'H' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(H),
-            b'B' => RE
-                .find(input)
-                .map(|s| s.as_bytes().into())
-                .map(B),
+            b'A' => RE.find(input).map(|s| s.as_bytes().into()).map(A),
+            b'i' => RE.find(input).map(|s| s.as_bytes().into()).map(I),
+            b'f' => RE.find(input).map(|s| s.as_bytes().into()).map(F),
+            b'Z' => RE.find(input).map(|s| s.as_bytes().into()).map(Z),
+            b'J' => RE.find(input).map(|s| s.as_bytes().into()).map(J),
+            b'H' => RE.find(input).map(|s| s.as_bytes().into()).map(H),
+            b'B' => RE.find(input).map(|s| s.as_bytes().into()).map(B),
             _ => None,
         }?;
 

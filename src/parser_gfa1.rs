@@ -1,12 +1,8 @@
 pub use crate::parser_gfa2::error::{
-    GFAFieldResult, 
-    GFAResult, 
-    ParseError, 
-    ParseFieldError,
-    ParserTolerance,
+    GFAFieldResult, GFAResult, ParseError, ParseFieldError, ParserTolerance,
 };
 
-use bstr::{BStr, ByteSlice, BString};
+use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
@@ -26,7 +22,7 @@ impl GFAParserBuilder {
     /// Parse no GFA lines, useful if you only want to parse one line type.
     pub fn none() -> Self {
         GFAParserBuilder {
-            headers:  false,
+            headers: false,
             segments: false,
             links: false,
             containments: false,
@@ -139,18 +135,13 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line =
-            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
             b"H" => Header::parse_line(fields).map(Header::wrap),
-            b"S" if self.segments => {
-                Segment::parse_line(fields).map(Segment::wrap)
-            }
+            b"S" if self.segments => Segment::parse_line(fields).map(Segment::wrap),
             b"L" if self.links => Link::parse_line(fields).map(Link::wrap),
-            b"C" if self.containments => {
-                Containment::parse_line(fields).map(Containment::wrap)
-            }
+            b"C" if self.containments => Containment::parse_line(fields).map(Containment::wrap),
             b"P" if self.paths => Path::parse_line(fields).map(Path::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
@@ -183,13 +174,13 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
     /// ```ignore
     /// use gfa2::parser_gfa1::GFAParser;
     /// use gfa2::gfa1::GFA;
-    /// 
+    ///
     /// let parser: GFAParser<BString, ()> = GFAParser::new();
     /// let gfa: GFA<BString, ()> =
     ///     parser.parse_file(&"./tests/gfa_files/data.gfa").unwrap();
-    /// 
+    ///
     /// println!("{}", gfa);
-    /// 
+    ///
     /// /*
     /// H	VN:Z:1.0
     /// S	11	ACCTT
@@ -200,19 +191,21 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
     /// L	11	+	13	+	3M
     /// P	14	11+,12-,13+	4M,5M
     /// */
-    /// 
+    ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-    ) -> Result<GFA<N, T>, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA<N, T>, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
         };
         // use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+        use std::ffi::OsStr;
 
-        let file = File::open(path)?;
+        let file = File::open(path.as_ref())?;
+        match path.as_ref().extension().and_then(OsStr::to_str).unwrap() {
+            "gfa2" | "gfa" => (),
+            _ => return Err(ParseError::ExtensionError()),
+        }
         let lines = BufReader::new(file).byte_lines();
         let mut gfa = GFA::new();
 
@@ -224,7 +217,9 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
         ));
         */
 
-        for line in lines/*.progress_with(pb)*/ {
+        for line in lines
+        /*.progress_with(pb)*/
+        {
             let line = line?;
             match self.parse_gfa_line(line.as_ref()) {
                 Ok(parsed) => gfa.insert_line(parsed),
@@ -317,12 +312,11 @@ impl<T: OptFields> Header<T> {
     {
         let next = next_field(&mut input)?;
         let version = OptField::parse(next.as_ref());
-        let version =
-            if let Some(OptFieldVal::Z(version)) = version.map(|v| v.value) {
-                Some(version)
-            } else {
-                None
-            };
+        let version = if let Some(OptFieldVal::Z(version)) = version.map(|v| v.value) {
+            Some(version)
+        } else {
+            None
+        };
 
         let optional = T::parse(input);
 
@@ -456,7 +450,8 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
+        static ref RE: Regex =
+            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
     }
 
     let next = next_field(input)?;
@@ -518,8 +513,7 @@ mod tests {
             optional: (),
         };
 
-        let result: GFAFieldResult<Header<()>> =
-            Header::parse_line([hdr].iter());
+        let result: GFAFieldResult<Header<()>> = Header::parse_line([hdr].iter());
 
         match result {
             Err(_) => {
@@ -592,7 +586,7 @@ mod tests {
             Ok(p) => {
                 println!("{}", p.clone());
                 assert_eq!(p, path_)
-            },
+            }
         }
     }
 
@@ -606,10 +600,7 @@ mod tests {
 
         let _optional_fields: Vec<_> = vec![
             OptField::new(b"LN", I(BString::from("123"))),
-            OptField::new(
-                b"SH",
-                H(BString::from("AACCFF05")),
-            ),
+            OptField::new(b"SH", H(BString::from("AACCFF05"))),
             OptField::new(b"RC", I(BString::from("123"))),
             OptField::new(b"UR", Z(BString::from("http://test.com/"))),
             OptField::new(b"IJ", A(BString::from("x"))),
@@ -618,8 +609,7 @@ mod tests {
         .into_iter()
         .collect();
 
-        let segment_1: GFAFieldResult<Segment<BString, ()>> =
-            Segment::parse_line(fields.clone());
+        let segment_1: GFAFieldResult<Segment<BString, ()>> = Segment::parse_line(fields.clone());
 
         assert!(segment_1.is_ok());
         assert_eq!(
@@ -631,8 +621,7 @@ mod tests {
             segment_1.unwrap(),
         );
 
-        let segment_2: Segment<BString, OptionalFields> =
-            Segment::parse_line(fields).unwrap();
+        let segment_2: Segment<BString, OptionalFields> = Segment::parse_line(fields).unwrap();
 
         assert_eq!(segment_2.name.as_bstr(), name);
         assert_eq!(segment_2.sequence.as_bstr(), seq);

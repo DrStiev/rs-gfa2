@@ -1,20 +1,9 @@
+use crate::parser_gfa2::ParseFieldError;
 /// I don't think this file could be as useful as the original.
 use serde::{Deserialize, Serialize};
-use crate::parser_gfa2::ParseFieldError;
 
 /// Represents segment orientation/strand
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Serialize,
-    Deserialize,
-    Hash,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 pub enum Orientation {
     Forward,
     Backward,
@@ -35,10 +24,7 @@ impl Orientation {
         opt.ok_or(ParseFieldError::OrientationError)
     }
 
-    pub fn write_plus_minus(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    pub fn write_plus_minus(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let sym = match self {
             Self::Forward => '+',
             Self::Backward => '-',
@@ -63,10 +49,7 @@ impl Orientation {
         }
     }
 
-    pub fn write_gt_ln(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    pub fn write_gt_ln(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let sym = match self {
             Self::Forward => '>',
             Self::Backward => '<',

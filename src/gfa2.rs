@@ -2,22 +2,22 @@
 pub mod orientation;
 pub mod traits;
 
-pub use self::traits::*;
 pub use self::orientation::*;
+pub use self::traits::*;
 
 use crate::tag::*;
 use bstr::{BStr, BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Returns an Header line 
-/// 
+/// Returns an Header line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
-/// 
-/// // inizialize a simple header 
+///
+/// // inizialize a simple header
 /// let header = "VN:Z:2.0";
 /// let header_ = Header {
 ///     version: Some("VN:Z:2.0".into()),
@@ -33,7 +33,7 @@ pub struct Header<T: OptFields> {
 impl<T: OptFields> Header<T> {
     pub fn new(version: Option<BString>) -> Self {
         Header {
-            version: version,
+            version,
             tag: Default::default(),
         }
     }
@@ -51,7 +51,7 @@ impl<T: OptFields> Default for Header<T> {
 impl<T: OptFields> fmt::Display for Header<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         if let Some(v) = &self.version {
@@ -59,23 +59,24 @@ impl<T: OptFields> fmt::Display for Header<T> {
                 f,
                 "H\t{}\t{}",
                 v,
-                opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+                opt.iter()
+                    .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
             )
         } else {
             write!(f, "H")
-        }        
-    }  
+        }
+    }
 }
 
-/// Returns a Segment line 
-/// 
+/// Returns a Segment line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple segment 
+///
+/// // inizialize a simple segment
 /// let segment = "A\t10\tAAAAAAACGT";
 /// let segment_: Segment<BString, _> = Segment {
 ///     id: "A".into(),
@@ -84,16 +85,7 @@ impl<T: OptFields> fmt::Display for Header<T> {
 ///     tag:(),
 /// };
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Segment<N, T: OptFields> {
     pub id: N,
     pub len: BString,
@@ -115,7 +107,7 @@ impl<T: OptFields> Segment<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -124,20 +116,21 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
             self.id,
             self.len.as_bstr(),
             self.sequence.as_bstr(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns a Fragment line 
-/// 
+/// Returns a Fragment line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple fragment 
+///
+/// // inizialize a simple fragment
 /// let fragment = "15\tr1-\t10\t10\t20\t20\t*";
 /// let fragment_: Fragment<BString, _> = Fragment {
 ///     id: "15".into(),
@@ -150,16 +143,7 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Segment<N, T> {
 ///     tag:(),
 /// };
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Fragment<N, T: OptFields> {
     pub id: N,
     pub ext_ref: N, // orientation as final char (+-)
@@ -167,7 +151,7 @@ pub struct Fragment<N, T: OptFields> {
     pub send: BString, // dollar character as optional final char
     pub fbeg: BString,
     pub fend: BString,
-    pub alignment: BString, // alignment field can be *, trace or CIGAR 
+    pub alignment: BString, // alignment field can be *, trace or CIGAR
     pub tag: T,
 }
 
@@ -197,7 +181,7 @@ impl<T: OptFields> Fragment<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -210,20 +194,21 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
             self.fbeg.as_bstr(),
             self.fend.as_bstr(),
             self.alignment.as_bstr(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns an Edge line 
-/// 
+/// Returns an Edge line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple edge 
+///
+/// // inizialize a simple edge
 /// let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
 /// let edge_: Edge<BString, _> = Edge {
 ///     id: "*".into(),
@@ -237,24 +222,15 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Fragment<N, T> {
 ///     tag:(),
 /// };
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Edge<N, T: OptFields> {
-    pub id: N, // optional id, can be either * or id tag
+    pub id: N,   // optional id, can be either * or id tag
     pub sid1: N, // orientation as final char (+-)
     pub sid2: N, // orientation as final char (+-)
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
-    pub end2: BString, // dollar character as optional final char
+    pub end2: BString,      // dollar character as optional final char
     pub alignment: BString, // alignment field can be *, trace or CIGAR
     pub tag: T,
 }
@@ -287,7 +263,7 @@ impl<T: OptFields> Edge<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -301,20 +277,21 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
             self.beg2.as_bstr(),
             self.end2.as_bstr(),
             self.alignment.as_bstr(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns a Gap line 
-/// 
+/// Returns a Gap line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple gap 
+///
+/// // inizialize a simple gap
 /// let gap = "g1\t7+\t22+\t10\t*";
 /// let gap_: Gap<BString, _> = Gap {
 ///     id: "g1".into(),
@@ -325,18 +302,9 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Edge<N, T> {
 ///     tag:(),
 /// };
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Gap<N, T: OptFields> {
-    pub id: N, // optional id, can be either * or id tag
+    pub id: N,   // optional id, can be either * or id tag
     pub sid1: N, // orientation as final char (+-)
     pub sid2: N, // orientation as final char (+-)
     pub dist: BString,
@@ -345,13 +313,7 @@ pub struct Gap<N, T: OptFields> {
 }
 
 impl<T: OptFields> Gap<BString, T> {
-    pub fn new(
-        id: &[u8],
-        sid1: &[u8],
-        sid2: &[u8],
-        dist: &[u8],
-        var: &[u8],
-    ) -> Self {
+    pub fn new(id: &[u8], sid1: &[u8], sid2: &[u8], dist: &[u8], var: &[u8]) -> Self {
         Gap {
             id: BString::from(id),
             sid1: BString::from(sid1),
@@ -366,7 +328,7 @@ impl<T: OptFields> Gap<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -377,20 +339,21 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
             self.sid2,
             self.dist.as_bstr(),
             self.var.as_bstr(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns an O-Group line 
-/// 
+/// Returns an O-Group line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple o-group 
+///
+/// // inizialize a simple o-group
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
 /// let ogroup_: GroupO<BString, _> = GroupO::new(
 ///     "P1".into(),
@@ -398,37 +361,28 @@ impl<N: SegmentId, T: OptFields> fmt::Display for Gap<N, T> {
 ///     (),
 /// );
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupO<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
+    pub id: BString,        // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
-    pub tag: T,  
+    pub tag: T,
     _segment_names: std::marker::PhantomData<N>,
 }
 
 impl<N: SegmentId, T: OptFields> GroupO<N, T> {
     pub fn new(id: BString, var_field: BString, tag: T) -> Self {
         GroupO {
-            id: id,
-            var_field: var_field,
-            tag: tag,
+            id,
+            var_field,
+            tag,
             _segment_names: std::marker::PhantomData,
         }
     }
 }
 
-impl<N: SegmentId, T:OptFields> GroupO<N, T> {
+impl<N: SegmentId, T: OptFields> GroupO<N, T> {
     /// parses (and copies) a segment ID in the group segment list
     fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
         use Orientation::*;
@@ -450,7 +404,7 @@ impl<T: OptFields> GroupO<usize, T> {
         self.var_field
             .split_str(b" ")
             .filter_map(Self::parse_segment_id)
-    } 
+    }
 }
 
 impl<T: OptFields> GroupO<BString, T> {
@@ -477,7 +431,7 @@ impl<T: OptFields> GroupO<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -485,20 +439,21 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
             "O\t{}\t{}\t{}",
             self.id,
             self.var_field.as_bstr().to_string(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns an U-Group line 
-/// 
+/// Returns an U-Group line
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
-/// // inizialize a simple u-group 
+///
+/// // inizialize a simple u-group
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
 /// let ugroup_: GroupU<BString, _> = GroupU::new(
 ///     "SG1".into(),
@@ -506,31 +461,22 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupO<N, T> {
 ///     (),
 /// );
 /// ```
-#[derive(
-    Default, 
-    Debug, 
-    Clone, 
-    PartialEq, 
-    PartialOrd, 
-    Serialize, 
-    Deserialize, 
-    Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupU<N, T: OptFields> {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
-    pub var_field: BString, // "array" of id (from 1 to n)  
-    pub tag: T,  
+    pub id: BString,        // optional id, can be either * or id tag
+    pub var_field: BString, // "array" of id (from 1 to n)
+    pub tag: T,
     _segment_names: std::marker::PhantomData<N>,
 }
 
 impl<N: SegmentId, T: OptFields> GroupU<N, T> {
     pub fn new(id: BString, var_field: BString, tag: T) -> Self {
         GroupU {
-            id: id,
-            var_field: var_field,
-            tag: tag,
+            id,
+            var_field,
+            tag,
             _segment_names: std::marker::PhantomData,
         }
     }
@@ -538,7 +484,7 @@ impl<N: SegmentId, T: OptFields> GroupU<N, T> {
 
 // U-Group do not have any orientations on the segment ids that they contained
 // so I used as "deafult orientation" the Forward one ('+')
-impl<N: SegmentId, T:OptFields> GroupU<N, T> {
+impl<N: SegmentId, T: OptFields> GroupU<N, T> {
     /// parses (and copies) a segment ID in the group segment list
     fn parse_segment_id(input: &[u8]) -> Option<N> {
         let id = N::parse_opt_id(input)?;
@@ -552,7 +498,7 @@ impl<T: OptFields> GroupU<usize, T> {
         self.var_field
             .split_str(b" ")
             .filter_map(Self::parse_segment_id)
-    } 
+    }
 }
 
 // U-Group do not have any orientations on the segment ids that they contained
@@ -573,7 +519,7 @@ impl<T: OptFields> GroupU<BString, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut opt = vec![];
-        for tag in self.tag.fields(){
+        for tag in self.tag.fields() {
             opt.push(tag);
         }
         write!(
@@ -581,19 +527,20 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
             "U\t{}\t{}\t{}",
             self.id,
             self.var_field.as_bstr().to_string(),
-            opt.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            opt.iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
 
-/// Returns a GFA2 object 
-/// 
+/// Returns a GFA2 object
+///
 /// # Examples
-/// 
+///
 /// ```ignore
 /// use gfa2::*;
 /// use bstr::BString;
-/// 
+///
 /// let gfa2: GFA2<BString, OptionalFields> = GFA2 {
 ///     headers: vec![
 ///         Header::new(Some("VN:Z:2.0".into())),
@@ -617,10 +564,10 @@ impl<N: SegmentId, T: OptFields> fmt::Display for GroupU<N, T> {
 ///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", vec![]),
 ///     ]
 /// };
-/// // inizialize a simple gfa2 object 
+/// // inizialize a simple gfa2 object
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
-pub struct GFA2<N, T:OptFields> { 
+pub struct GFA2<N, T: OptFields> {
     // OptFields is used to encode the <tag>* item
     // struct to hold the results of parsing a file; not actually a graph
     pub headers: Vec<Header<T>>,
@@ -634,7 +581,7 @@ pub struct GFA2<N, T:OptFields> {
 
 /// Enum containing the different kinds of GFA2 lines.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum Line<N, T:OptFields> {
+pub enum Line<N, T: OptFields> {
     Header(Header<T>),
     Segment(Segment<N, T>),
     Fragment(Fragment<N, T>),
@@ -667,7 +614,7 @@ some_line_fn!(some_ogroup, GroupO<N, T>, Line::GroupO);
 some_line_fn!(some_ugroup, GroupU<N, T>, Line::GroupU);
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum LineRef<'a, N, T:OptFields> {
+pub enum LineRef<'a, N, T: OptFields> {
     Header(&'a Header<T>),
     Segment(&'a Segment<N, T>),
     Fragment(&'a Fragment<N, T>),
@@ -764,7 +711,7 @@ impl<N, T: OptFields> GFA2<N, T> {
     }
 }
 
-impl<N: SegmentId, T:OptFields> GFA2<N, T> {
+impl<N: SegmentId, T: OptFields> GFA2<N, T> {
     pub fn new() -> Self {
         Default::default()
     }
@@ -773,15 +720,29 @@ impl<N: SegmentId, T:OptFields> GFA2<N, T> {
 impl<N: SegmentId, T: OptFields> fmt::Display for GFA2<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
-            f, 
+            f,
             "{}{}{}{}{}{}{}",
-            self.headers.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.segments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.fragments.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.edges.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.gaps.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.groups_o.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.groups_u.iter().fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.headers
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.segments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.fragments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.edges
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.gaps
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.groups_o
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.groups_u
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
         )
     }
 }
