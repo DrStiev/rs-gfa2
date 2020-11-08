@@ -176,6 +176,32 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
         Ok(gfa)
     }
 
+    /// Function that return a ```Result<GFA<N, T>, ParseError>``` object\
+    /// ```N = GFA type```\
+    /// ```T = OptionalFields or ()```
+    /// # Examples
+    /// ```ignore
+    /// use gfa2::parser_gfa1::GFAParser;
+    /// use gfa2::gfa1::GFA;
+    /// 
+    /// let parser: GFAParser<BString, ()> = GFAParser::new();
+    /// let gfa: GFA<BString, ()> =
+    ///     parser.parse_file(&"./tests/gfa_files/data.gfa").unwrap();
+    /// 
+    /// println!("{}", gfa);
+    /// 
+    /// /*
+    /// H	VN:Z:1.0
+    /// S	11	ACCTT
+    /// S	12	TCAAGG
+    /// S	13	CTTGATT
+    /// L	11	+	12	-	4M
+    /// L	12	-	13	+	5M
+    /// L	11	+	13	+	3M
+    /// P	14	11+,12-,13+	4M,5M
+    /// */
+    /// 
+    /// ```
     pub fn parse_file<P: AsRef<std::path::Path>>(
         &self,
         path: P,
@@ -184,13 +210,19 @@ impl<N: SegmentId, T: OptFields> GFAParser<N, T> {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
         };
+        use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
         let file = File::open(path)?;
         let lines = BufReader::new(file).byte_lines();
-
         let mut gfa = GFA::new();
 
-        for line in lines {
+        // Provide a custom bar style
+        let pb = ProgressBar::new(1000);
+        pb.set_style(ProgressStyle::default_bar().template(
+            "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
+        ));
+
+        for line in lines.progress_with(pb) {
             let line = line?;
             match self.parse_gfa_line(line.as_ref()) {
                 Ok(parsed) => gfa.insert_line(parsed),

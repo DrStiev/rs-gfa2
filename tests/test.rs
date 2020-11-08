@@ -128,8 +128,9 @@ fn can_parse_gfa2_with_multiple_tag() {
 
 #[test]
 #[ignore]
-fn can_parse_big_file() {
-    // parsing file, about 7 minutes
+fn can_parse_big_file_gfa2() {
+    // parsing file and counting items, about 7 minutes (WITHOUT PROGRESSBAR)
+    // parsing file and counting items, about 14 minutes (WITH PROGRESSBAR)
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
     let gfa2: GFA2<BString, OptionalFields> =
         parser.parse_file(&"./tests/big_files/ape-4-0.10b.gfa2").unwrap();
@@ -151,6 +152,30 @@ fn can_parse_big_file() {
         GroupO lines: {}\n
         GroupU lines: {}\n",
         head, seg, frag, edge, gap, ogroup, ugroup);
+}
+
+#[test]
+#[ignore]
+fn can_parse_big_file_gfa1() {
+    // parsing file and counting items, about 7 minutes (WITHOUT PROGRESSBAR)
+    // parsing file and counting items, about 14 minutes (WITH PROGRESSBAR)
+    let parser: GFAParser<BString, OptionalFields> = GFAParser::new();
+    let gfa: GFA<BString, OptionalFields> =
+        parser.parse_file(&"./tests/big_files/ape-4-0.10b.gfa").unwrap();
+
+    let head = gfa.headers.len();
+    let seg = gfa.segments.len(); // 715018
+    let link = gfa.links.len();// 985462
+    let cont = gfa.containments.len(); 
+    let path = gfa.paths.len();
+
+    println!(
+        "Header lines: {}\n
+        Segment lines: {}\n 
+        Link lines: {}\n
+        Containments lines: {}\n
+        Path lines: {}\n",
+        head, seg, link, cont, path);
 }
 
 #[test]
@@ -179,6 +204,53 @@ fn gfa_usize_parser() {
     
     assert!(!usize_gfa.is_err())
 }
+
+#[test]
+fn can_parse_medium_file_gfa1() {
+    let parser: GFAParser<BString, OptionalFields> = GFAParser::new();
+    let gfa: GFA<BString, OptionalFields> =
+        parser.parse_file(&"./tests/big_files/test.gfa").unwrap();
+
+    let head = gfa.headers.len();
+    let seg = gfa.segments.len(); // 4058
+    let link = gfa.links.len();// 10639
+    let cont = gfa.containments.len(); 
+    let path = gfa.paths.len(); // 7
+
+    println!(
+        "Header lines: {}\n
+        Segment lines: {}\n 
+        Link lines: {}\n
+        Containments lines: {}\n
+        Path lines: {}\n",
+        head, seg, link, cont, path);
+}
+
+#[test]
+fn can_parse_medium_file_gfa2() {
+    let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
+    let gfa2: GFA2<BString, OptionalFields> =
+        parser.parse_file(&"./tests/big_files/test.gfa2").unwrap();
+
+    let head = gfa2.headers.len();
+    let seg = gfa2.segments.len(); // 4058
+    let frag = gfa2.fragments.len();
+    let edge = gfa2.edges.len(); // 10639
+    let gap = gfa2.gaps.len();
+    let ogroup = gfa2.groups_o.len(); // 7
+    let ugroup = gfa2.groups_u.len();
+
+    println!(
+        "Header lines: {}\n
+        Segment lines: {}\n 
+        Fragment lines: {}\n
+        Edge lines: {}\n
+        Gap lines: {}\n
+        GroupO lines: {}\n
+        GroupU lines: {}\n",
+        head, seg, frag, edge, gap, ogroup, ugroup);
+}
+
 
 #[test]
 fn gfa_parser_line_iter() {
