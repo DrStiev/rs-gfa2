@@ -159,7 +159,7 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
         Ok(line)
     }
 
-    fn parse_lines<I>(&self, lines: I) -> GFA2Result<GFA2<N, T>>
+    pub fn parse_lines<I>(&self, lines: I) -> GFA2Result<GFA2<N, T>>
     where
         I: Iterator,
         I::Item: AsRef<[u8]>,

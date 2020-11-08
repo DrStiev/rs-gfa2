@@ -14,6 +14,7 @@ use crate::{gfa1::*, tag::*};
 
 /// Builder struct for GFAParsers
 pub struct GFAParserBuilder {
+    pub headers: bool,
     pub segments: bool,
     pub links: bool,
     pub containments: bool,
@@ -25,6 +26,7 @@ impl GFAParserBuilder {
     /// Parse no GFA lines, useful if you only want to parse one line type.
     pub fn none() -> Self {
         GFAParserBuilder {
+            headers:  false,
             segments: false,
             links: false,
             containments: false,
@@ -36,6 +38,7 @@ impl GFAParserBuilder {
     /// Parse all GFA lines.
     pub fn all() -> Self {
         GFAParserBuilder {
+            headers: true,
             segments: true,
             links: true,
             containments: true,
@@ -76,6 +79,7 @@ impl GFAParserBuilder {
 
     pub fn build<N: SegmentId, T: OptFields>(self) -> GFAParser<N, T> {
         GFAParser {
+            headers: self.headers,
             segments: self.segments,
             links: self.links,
             containments: self.containments,
@@ -105,6 +109,7 @@ impl GFAParserBuilder {
 /// ```
 #[derive(Clone)]
 pub struct GFAParser<N: SegmentId, T: OptFields> {
+    headers: bool,
     segments: bool,
     links: bool,
     containments: bool,
