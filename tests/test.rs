@@ -207,6 +207,7 @@ fn gfa_usize_parser() {
 
 #[test]
 fn can_parse_medium_file_gfa1() {
+    // parsing file and counting items, about 3 seconds (WITH PROGRESSBAR)
     let parser: GFAParser<BString, OptionalFields> = GFAParser::new();
     let gfa: GFA<BString, OptionalFields> =
         parser.parse_file(&"./tests/big_files/test.gfa").unwrap();
@@ -228,6 +229,7 @@ fn can_parse_medium_file_gfa1() {
 
 #[test]
 fn can_parse_medium_file_gfa2() {
+    // parsing file and counting items, about 3 seconds (WITH PROGRESSBAR)
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
     let gfa2: GFA2<BString, OptionalFields> =
         parser.parse_file(&"./tests/big_files/test.gfa2").unwrap();

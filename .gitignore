@@ -3,6 +3,4 @@ tests/big_files/ape-4-0.10b.gfa
 tests/big_files/ape-4-0.10b.gfa2
 tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa
 tests/big_files/GRCh38-20-0.10b.gfa
-tests/big_files/test.gfa
-tests/big_files/test.gfa2
 src/gfa_to_gfa2_conversion.rs
