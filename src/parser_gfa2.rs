@@ -207,20 +207,22 @@ impl<N: SegmentId, T: OptFields> GFA2Parser<N, T> {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
         };
-        use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+        // use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
         let file = File::open(path)?;
         //let len = std::fs::metadata(path)?.len();
         let lines = BufReader::new(file).byte_lines();
         let mut gfa2 = GFA2::new();
 
+        /*
         // Provide a custom bar style
         let pb = ProgressBar::new(1000);
         pb.set_style(ProgressStyle::default_bar().template(
             "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
         ));
+        */
         
-        for line in lines.progress_with(pb) {
+        for line in lines/*.progress_with(pb)*/ {
             let line = line?;
             match self.parse_gfa_line(line.as_ref()) {
                 Ok(parsed) => gfa2.insert_line(parsed),
