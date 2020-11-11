@@ -312,6 +312,7 @@ impl<T: OptFields> Header<T> {
         } else {
             None
         };
+
         let tag = T::parse(input);
 
         Ok(Header { version, tag })

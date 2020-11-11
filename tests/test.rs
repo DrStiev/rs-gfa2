@@ -9,8 +9,8 @@ use gfa2::{
 
 #[test]
 fn markdown_test() {
-    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
-    let gfa2: GFA2<usize, ()> = parser
+    let parser: GFA2Parser<usize, OptionalFields> = GFA2Parser::new();
+    let gfa2: GFA2<usize, OptionalFields> = parser
         .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
         .unwrap();
     println!("{:#?}", gfa2);
@@ -110,12 +110,12 @@ fn can_parse_gfa2_graph() {
 
     println!(
         "Header lines: {}\n
-    Segment lines: {}\n 
-    Fragment lines: {}\n
-    Edge lines: {}\n
-    Gap lines: {}\n
-    GroupO lines: {}\n
-    GroupU lines: {}\n",
+        Segment lines: {}\n 
+        Fragment lines: {}\n
+        Edge lines: {}\n
+        Gap lines: {}\n
+        GroupO lines: {}\n
+        GroupU lines: {}\n",
         head, seg, frag, edge, gap, ogroup, ugroup
     );
 }
@@ -142,6 +142,7 @@ fn can_parse_gfa2_with_multiple_tag() {
     assert_eq!(ogroup, 0);
     assert_eq!(ugroup, 0);
 
+    println!("{:#?}", gfa2);
     println!("{}", gfa2);
 }
 
