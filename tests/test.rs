@@ -8,6 +8,16 @@ use gfa2::{
 };
 
 #[test]
+fn markdown_test() {
+    let parser: GFA2Parser<usize, ()> = GFA2Parser::new();
+    let gfa2: GFA2<usize, ()> = parser
+        .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
+        .unwrap();
+    println!("{:#?}", gfa2);
+    println!("{}", gfa2);
+}
+
+#[test]
 fn can_parse_gfa2_file_with_tag() {
     let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
     let gfa2: GFA2<BString, OptionalFields> = parser
