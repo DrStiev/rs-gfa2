@@ -7,7 +7,7 @@ This library is compatible with the [version 2 specification](https://github.com
 This library it's a variation of the library developed by **Christian Fischer** [link here](https://github.com/chfi/rs-gfa).
 
 ## Usage
-This library performs 1 main operation on a file: 
+This library performs 2 main operation on a file: 
 - Checking if a file is conform to a specified format and then create a GFA2 (or GFA) object.\
 Given a file for example: file.gfa2 
 ```
