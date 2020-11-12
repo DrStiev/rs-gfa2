@@ -650,11 +650,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_parse_header() {
-        let header = "VN:Z:2.0";
+    fn blank_header() {
+        let header = "";
         let header_ = Header {
             // the version field of the header object is used to store
             // the entire header tag without the optional (tag)*
+            version: None,
+            tag: (),
+        };
+
+        let result: GFA2FieldResult<Header<()>> = Header::parse_line([header].iter());
+
+        match result {
+            Err(why) => println!("Error: {}", why),
+            Ok(h) => assert_eq!(h, header_),
+        }
+    }
+
+    #[test]
+    fn can_parse_header() {
+        let header = "VN:Z:2.0";
+        let header_ = Header {
             version: Some("VN:Z:2.0".into()),
             tag: (),
         };

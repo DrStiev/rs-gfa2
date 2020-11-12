@@ -63,7 +63,12 @@ impl<T: OptFields> fmt::Display for Header<T> {
                     .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
             )
         } else {
-            write!(f, "H")
+            write!(
+                f,
+                "H\t{}",
+                opt.iter()
+                    .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            )
         }
     }
 }
