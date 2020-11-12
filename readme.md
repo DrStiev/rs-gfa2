@@ -25,10 +25,10 @@ This can be parsed to create 4 different GFA2 Objects:
 1. GFA2<BString, OptionalFields>, this create an Object containing all the fields parsed as [BString](https://docs.rs/bstr/0.2.14/bstr/struct.BString.html) with all the optional tags.\
 ```rust
 let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<BString, OptionalFields> = parser
-        .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
-        .unwrap();
-    println!("{:#?}", gfa2);
+let gfa2: GFA2<BString, OptionalFields> = parser
+    .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
+    .unwrap();
+println!("{:#?}", gfa2);
 ```
 The Object obtained will look like this:
 ```
@@ -121,10 +121,10 @@ This kind of conversion use the [ASCII](https://www.ascii-code.com/) codes to co
 Moreover, this types needs to perform an additional conversion for the Orientation fields [+-] associated with the ref tag of Fragment, Edge, Gap and O-Group, converting the [+] symbol as [0] and [-] as [1].\
 ```rust
 let parser: GFA2Parser<usize, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<usize, OptionalFields> = parser
-        .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
-        .unwrap();
-    println!("{:#?}", gfa2);
+let gfa2: GFA2<usize, OptionalFields> = parser
+    .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
+    .unwrap();
+println!("{:#?}", gfa2);
 ```
 The Object obtained will look like this:
 ```
@@ -220,10 +220,10 @@ In this example the character "*" it's converted as the number "42", that is the
 - A GFA Object can be pretty printed thanks to the implementation of the ``` Display traits ```:
 ```rust
 let parser: GFA2Parser<BString, OptionalFields> = GFA2Parser::new();
-    let gfa2: GFA2<BString, OptionalFields> = parser
-        .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
-        .unwrap();
-    println!("{}", gfa2);
+let gfa2: GFA2<BString, OptionalFields> = parser
+    .parse_file(&"./tests/gfa2_files/spec_q7.gfa")
+    .unwrap();
+println!("{}", gfa2);
 ```
 Obtaining: 
 ```
